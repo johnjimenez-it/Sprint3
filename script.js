@@ -1,14 +1,19 @@
-import { kioskConfig } from './config.js';
-
 const screenOrder = [
   'screen-welcome',
   'screen-background',
-  'screen-custom-background',
   'screen-party',
   'screen-delivery',
   'screen-payment',
   'screen-review',
   'screen-receipt'
+];
+
+const progressScreens = [
+  'screen-background',
+  'screen-party',
+  'screen-delivery',
+  'screen-payment',
+  'screen-review'
 ];
 
 const state = {
@@ -22,13 +27,50 @@ const state = {
   emailCount: 0,
   emails: [],
   paymentMethod: null,
-  selfieData: null
+  selfieData: null,
+  multipleBackgrounds: false
+};
+
+const PRICING_DEFAULTS = {
+  printFee: 5,
+  emailFee: 3,
+  multiBackgroundFee: 10
 };
 
 let currentScreenIndex = 0;
 let currentKeyboardInput = null;
 let keyboardValue = '';
 let selfieStream = null;
+let appConfig = null;
+let pendingReceipt = null;
+
+const backgroundGradients = {
+  'fsu-garnet': 'linear-gradient(135deg, #782F40, #9b4a54 55%, #CEB888)',
+  'fsu-gold': 'linear-gradient(135deg, #CEB888, #fff1c1)',
+  'fsu-spear': 'linear-gradient(140deg, #782F40 15%, #CEB888 85%)',
+  'fsu-campus': 'linear-gradient(160deg, #1c2b4a, #782F40)',
+  'fsu-stadium': 'linear-gradient(135deg, #0f1a30, #782F40 65%, #CEB888)',
+  'fsu-warpath': 'linear-gradient(135deg, #782F40, #a63d40 60%, #CEB888)',
+  'fsu-torch': 'linear-gradient(140deg, #ffb347 10%, #CEB888 55%, #782F40)',
+  'fsu-heritage': 'linear-gradient(135deg, #1f2235, #782F40 55%, #CEB888)',
+  'nature-forest': 'linear-gradient(135deg, #0b3d20, #2d6a4f)',
+  'nature-ocean': 'linear-gradient(135deg, #0077b6, #00b4d8)',
+  'nature-mountain': 'linear-gradient(135deg, #355070, #6d597a)',
+  'nature-garden': 'linear-gradient(135deg, #6a994e, #a7c957)',
+  'retro-grid': 'linear-gradient(135deg, #ff0080, #7928ca)',
+  'city-night': 'linear-gradient(135deg, #0f2027, #203a43 60%, #2c5364)',
+  neon: 'linear-gradient(135deg, #2d1b69, #f72585)',
+  cosmic: 'linear-gradient(135deg, #120078, #9d0191)',
+  beach: 'linear-gradient(135deg, #ffb347, #ffcc33)',
+  stage: 'linear-gradient(135deg, #414141, #000000)'
+};
+
+const IDLE_TIMEOUT = 25000;
+const IDLE_PROMPT_DURATION = 10000;
+let idleTimeoutId = null;
+let idlePromptTimeoutId = null;
+let idlePromptVisible = false;
+let idleCountdownInterval = null;
 
 function showScreen(targetId) {
   const keyboardScreen = document.getElementById('screen-keyboard');
@@ -45,6 +87,9 @@ function showScreen(targetId) {
       currentScreenIndex = index;
     }
   });
+
+  updateProgress(targetId);
+  resetIdleTimer();
 
   if (targetId === 'screen-review') {
     document.getElementById('review-summary').innerHTML = generateSummaryHTML();
@@ -112,17 +157,42 @@ function validateScreen(screenId) {
   return true;
 }
 
+async function loadConfig() {
+  try {
+    const res = await fetch('./config.json');
+    const config = await res.json();
+    window.appConfig = config;
+    appConfig = config;
+    init();
+  } catch (error) {
+    console.error('Unable to load configuration', error);
+  }
+}
+
 function init() {
+  if (!appConfig) return;
   setupNavigation();
   populateEventInfo();
   populateBackgrounds();
+  setupBackgroundAddons();
   populateTouchSelectors();
   setupCustomBackground();
   setupSelfie();
   setupKeyboard();
+  setupIdleTimer();
   document.getElementById('confirm-btn').addEventListener('click', onConfirm);
   document.getElementById('print-btn').addEventListener('click', () => window.print());
   document.getElementById('finish-btn').addEventListener('click', resetKiosk);
+  document.getElementById('cancel-confirm').addEventListener('click', hideConfirmModal);
+  document.getElementById('continue-confirm').addEventListener('click', finalizeTransaction);
+  const idleStayButton = document.getElementById('idle-stay');
+  if (idleStayButton) {
+    idleStayButton.addEventListener('click', () => {
+      hideIdlePrompt();
+      resetIdleTimer();
+    });
+  }
+  updateProgress('screen-welcome');
 }
 
 function setupNavigation() {
@@ -132,26 +202,40 @@ function setupNavigation() {
 }
 
 function populateEventInfo() {
-  document.getElementById('event-name').textContent = kioskConfig.backgroundTheme + ' — ' + kioskConfig.eventName;
-  const priceInfo = document.getElementById('price-info');
-  if (!kioskConfig.price) {
-    priceInfo.textContent = 'Today only: Free photo session!';
-  } else {
-    priceInfo.textContent = `Package Price: ${formatCurrency(kioskConfig.price, kioskConfig.currency)}`;
+  const eventName = document.getElementById('event-name');
+  if (eventName) {
+    eventName.textContent = `${appConfig.eventName}`;
   }
-  const paymentNote = document.getElementById('payment-note');
-  paymentNote.textContent = kioskConfig.price ?
-    `Total due: ${formatCurrency(kioskConfig.price, kioskConfig.currency)}. Tap a method to continue.` :
-    'No payment needed today. Tap a method to confirm delivery.';
+  const headerName = document.getElementById('eventName');
+  headerName.textContent = appConfig.eventName;
+  document.getElementById('eventTagline').textContent = 'Tap to begin your photo experience';
+  const priceInfo = document.getElementById('price-info');
+  const headerPrice = document.getElementById('eventPrice');
+  const baseFormatted = formatCurrency(Number(appConfig.price || 0), appConfig.currency);
+  const printFeeText = formatCurrency(getFeeValue('printFee', PRICING_DEFAULTS.printFee), appConfig.currency);
+  const emailFeeText = formatCurrency(getFeeValue('emailFee', PRICING_DEFAULTS.emailFee), appConfig.currency);
+  const multiFeeText = formatCurrency(getFeeValue('multiBackgroundFee', PRICING_DEFAULTS.multiBackgroundFee), appConfig.currency);
+
+  if (!appConfig.price) {
+    priceInfo.textContent = `Today only: Free photo session! Add-ons: prints ${printFeeText} each, emails ${emailFeeText} each, multi-background add-on ${multiFeeText}.`;
+    headerPrice.textContent = 'Free Event';
+  } else {
+    priceInfo.textContent = `Base package: ${baseFormatted}. Prints add ${printFeeText} each, emails add ${emailFeeText} each, multi-background add-on ${multiFeeText}.`;
+    headerPrice.textContent = `Starting at ${baseFormatted}`;
+  }
+
+  updatePricingDisplay();
 }
 
 function populateBackgrounds() {
   const template = document.getElementById('background-option-template');
   const grid = document.getElementById('background-grid');
-  kioskConfig.backgrounds.forEach((background, index) => {
+  grid.innerHTML = '';
+  appConfig.backgrounds.forEach((background, index) => {
     const option = template.content.firstElementChild.cloneNode(true);
-    option.style.backgroundImage = `url(${background.image})`;
+    option.style.backgroundImage = getBackgroundImage(background);
     option.querySelector('.label').textContent = background.name;
+    option.title = `Tap to choose ${background.name}`;
     option.addEventListener('click', () => selectBackground(background, option, index));
     grid.appendChild(option);
   });
@@ -160,22 +244,28 @@ function populateBackgrounds() {
 function selectBackground(background, option, index) {
   document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
   option.classList.add('selected');
-  state.background = background;
+  const backgroundImage = getBackgroundImage(background);
+  state.background = { ...background, image: backgroundImage };
   state.backgroundSource = 'preset';
   state.customBackgroundData = null;
-  updateBackgroundPreview(background.image);
+  updateBackgroundPreview(backgroundImage);
 }
 
 function updateBackgroundPreview(imageUrl) {
   const preview = document.getElementById('background-preview');
-  preview.style.backgroundImage = `url(${imageUrl})`;
-  preview.textContent = '';
+  if (imageUrl) {
+    preview.style.backgroundImage = imageUrl;
+    preview.textContent = '';
+  } else {
+    preview.style.backgroundImage = '';
+    preview.textContent = 'Choose a background';
+  }
 }
 
 function populateTouchSelectors() {
   createTouchSelector(
     document.getElementById('people-count'),
-    kioskConfig.numberOfPeopleOptions,
+    buildRange(1, 8),
     value => `${value}`,
     value => {
       state.peopleCount = Number(value);
@@ -184,37 +274,39 @@ function populateTouchSelectors() {
 
   createTouchSelector(
     document.getElementById('delivery-method'),
-    kioskConfig.deliveryMethods,
+    appConfig.deliveryMethods,
     value => value,
     value => {
       state.deliveryMethod = value;
     }
   );
 
-  const printOptions = buildRange(0, kioskConfig.maxPrints);
+  const printOptions = buildRange(0, appConfig.maxPrints);
   createTouchSelector(
     document.getElementById('prints-count'),
     printOptions,
     value => `${value}`,
     value => {
       state.prints = Number(value);
+      updatePricingDisplay();
     }
   );
 
-  const emailOptions = buildRange(0, kioskConfig.maxEmails);
+  const emailOptions = buildRange(0, appConfig.maxEmails);
   createTouchSelector(
     document.getElementById('email-count'),
     emailOptions,
     value => `${value}`,
     value => {
       state.emailCount = Number(value);
-      renderEmailInputs();
+      renderEmailInputs(state.emailCount);
+      updatePricingDisplay();
     }
   );
 
   createTouchSelector(
     document.getElementById('payment-method'),
-    kioskConfig.paymentMethods,
+    appConfig.paymentMethods,
     value => value,
     value => {
       state.paymentMethod = value;
@@ -245,12 +337,48 @@ function createTouchSelector(container, options, labelFormatter, onSelect) {
   });
 }
 
+function setupBackgroundAddons() {
+  const toggle = document.getElementById('multi-background-toggle');
+  if (!toggle) {
+    return;
+  }
+  toggle.addEventListener('click', () => {
+    state.multipleBackgrounds = !state.multipleBackgrounds;
+    updatePricingDisplay();
+  });
+  reflectMultiBackgroundState();
+}
+
+function reflectMultiBackgroundState() {
+  const toggle = document.getElementById('multi-background-toggle');
+  const note = document.getElementById('multi-background-note');
+  if (!toggle) {
+    return;
+  }
+  const isActive = Boolean(state.multipleBackgrounds);
+  const currency = (appConfig && appConfig.currency) || 'USD';
+  const multiFee = formatCurrency(getFeeValue('multiBackgroundFee', PRICING_DEFAULTS.multiBackgroundFee), currency);
+  toggle.classList.toggle('active', isActive);
+  toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  toggle.textContent = isActive
+    ? `Multi-Background Package Added (+${multiFee})`
+    : `Add Multi-Background Package (+${multiFee})`;
+  if (note) {
+    note.textContent = isActive
+      ? 'You’ll capture multiple scenes during your session.'
+      : 'Add a second background setup for an additional fee.';
+  }
+}
+
 function setupCustomBackground() {
   const helpButton = document.getElementById('custom-background-help');
   const modal = document.getElementById('custom-background-modal');
   const modalClose = document.getElementById('modal-close');
   const fileInput = document.getElementById('custom-background-input');
   const useButton = document.getElementById('custom-background-use');
+  if (!helpButton || !modal || !modalClose || !fileInput || !useButton) {
+    return;
+  }
   useButton.disabled = true;
 
   helpButton.addEventListener('click', () => modal.classList.remove('hidden'));
@@ -281,32 +409,33 @@ function setupCustomBackground() {
     state.background = {
       id: 'custom',
       name: 'Custom Background',
-      image: state.customBackgroundData
+      image: `url(${state.customBackgroundData})`
     };
     state.backgroundSource = 'custom';
-    updateBackgroundPreview(state.customBackgroundData);
+    updateBackgroundPreview(`url(${state.customBackgroundData})`);
     alert('Custom background ready!');
   });
 }
 
-function renderEmailInputs() {
-  const container = document.getElementById('email-entry-container');
+function renderEmailInputs(count = state.emailCount) {
+  const container = document.getElementById('emailInputs');
   container.innerHTML = '';
-  state.emails = [];
-  for (let i = 0; i < state.emailCount; i++) {
+  state.emails = new Array(count).fill('');
+  for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
     wrapper.className = 'email-chip touch-field';
     wrapper.dataset.keyboardTarget = `email-${i}`;
     const label = document.createElement('span');
     label.textContent = `Email ${i + 1}`;
     const input = document.createElement('input');
-    input.type = 'text';
+    input.type = 'email';
     input.id = `email-${i}`;
     input.readOnly = true;
     input.autocomplete = 'off';
     input.dataset.index = i;
     input.addEventListener('focus', () => openKeyboardForInput(input));
     input.addEventListener('click', () => openKeyboardForInput(input));
+    input.setAttribute('aria-label', `Email address ${i + 1}`);
     wrapper.appendChild(label);
     wrapper.appendChild(input);
     container.appendChild(wrapper);
@@ -447,12 +576,19 @@ function onConfirm() {
   stopSelfie();
   const summary = document.getElementById('review-summary');
   summary.innerHTML = generateSummaryHTML();
-  renderReceipt();
-  showScreen('screen-receipt');
+  capturePendingReceipt();
+  showConfirmModal();
 }
 
 function generateSummaryHTML() {
-  const priceText = kioskConfig.price ? formatCurrency(kioskConfig.price, kioskConfig.currency) : 'Free';
+  const priceDetails = calculatePriceDetails();
+  const priceText = priceDetails ? formatCurrency(priceDetails.total, priceDetails.currency) : 'Free';
+  const previewReceipt = {
+    charges: priceDetails,
+    prints: state.prints,
+    emailCount: state.emailCount,
+    multipleBackgrounds: state.multipleBackgrounds
+  };
   return `
     <h3>You're all set!</h3>
     <p><strong>Party:</strong> ${state.partyName}</p>
@@ -461,34 +597,69 @@ function generateSummaryHTML() {
     <p><strong>Delivery:</strong> ${state.deliveryMethod}</p>
     <p><strong>Prints:</strong> ${state.prints}</p>
     <p><strong>Email count:</strong> ${state.emailCount}</p>
+    <p><strong>Multi-background add-on:</strong> ${state.multipleBackgrounds ? 'Yes' : 'No'}</p>
     <p><strong>Payment:</strong> ${state.paymentMethod}</p>
     <p><strong>Total:</strong> ${priceText}</p>
+    ${buildPriceBreakdownMarkup(previewReceipt)}
   `;
+}
+
+function capturePendingReceipt() {
+  const now = new Date();
+  const photoID = generatePhotoID();
+  const formattedDate = now.toLocaleDateString('en-US');
+  const formattedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+  const emailList = collectEmailAddresses();
+  const priceDetails = calculatePriceDetails();
+  const priceText = priceDetails ? formatCurrency(priceDetails.total, priceDetails.currency) : 'Free';
+
+  pendingReceipt = {
+    customerNumber: photoID,
+    photoID,
+    createdAt: now.toISOString(),
+    date: formattedDate,
+    time: formattedTime,
+    partyName: state.partyName,
+    background: state.background ? state.background.name : 'Custom Upload',
+    backgroundId: state.background ? state.background.id : 'custom',
+    backgroundImage: state.background ? state.background.image : state.customBackgroundData,
+    deliveryMethod: state.deliveryMethod,
+    prints: state.prints,
+    emailCount: state.emailCount,
+    emails: emailList,
+    paymentMethod: state.paymentMethod,
+    total: priceText,
+    totalRaw: priceDetails ? priceDetails.total : 0,
+    charges: priceDetails ? { ...priceDetails } : null,
+    hotline: appConfig.hotline,
+    supportEmail: appConfig.supportEmail,
+    peopleCount: state.peopleCount,
+    multipleBackgrounds: state.multipleBackgrounds
+  };
 }
 
 function renderReceipt() {
   const receipt = document.getElementById('receipt-output');
-  const now = new Date();
-  const customerNumber = nextCustomerNumber();
-  const formattedDate = now.toLocaleDateString('en-US');
-  const formattedTime = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-  const emailList = state.emails.filter(email => email && email.length);
-  const emails = emailList.length ? emailList.map(email => `<li>${email}</li>`).join('') : '<li>No emails requested</li>';
-  const priceText = kioskConfig.price ? formatCurrency(kioskConfig.price, kioskConfig.currency) : 'Free';
+  if (!pendingReceipt) return;
+  const emails = pendingReceipt.emails.length ? pendingReceipt.emails.map(email => `<li>${email}</li>`).join('') : '<li>No emails requested</li>';
+  const breakdownMarkup = buildPriceBreakdownMarkup(pendingReceipt);
+  const multiBackgroundText = pendingReceipt.multipleBackgrounds ? 'Yes' : 'No';
 
   receipt.innerHTML = `
     <section class="receipt-section">
       <h3>Customer Copy</h3>
-      <p><strong>Name:</strong> ${state.partyName}</p>
-      <p><strong>Event:</strong> ${kioskConfig.backgroundTheme} — ${kioskConfig.eventName}</p>
-      <p><strong>Date:</strong> ${formattedDate}</p>
-      <p><strong>Time:</strong> ${formattedTime}</p>
-      <p><strong>Prints:</strong> ${state.prints}</p>
-      <p><strong>Emails:</strong> ${state.emailCount}</p>
-      <p><strong>Delivery:</strong> ${state.deliveryMethod}</p>
-      <p><strong>Payment Method:</strong> ${state.paymentMethod}</p>
-      <p><strong>Total:</strong> ${priceText}</p>
-      <p><strong>Customer #:</strong> ${customerNumber}</p>
+      <p><strong>Name:</strong> ${pendingReceipt.partyName}</p>
+      <p><strong>Event:</strong> ${appConfig.eventName}</p>
+      <p><strong>Date:</strong> ${pendingReceipt.date}</p>
+      <p><strong>Time:</strong> ${pendingReceipt.time}</p>
+      <p><strong>Prints:</strong> ${pendingReceipt.prints}</p>
+      <p><strong>Emails:</strong> ${pendingReceipt.emailCount}</p>
+      <p><strong>Delivery:</strong> ${pendingReceipt.deliveryMethod}</p>
+      <p><strong>Payment Method:</strong> ${pendingReceipt.paymentMethod}</p>
+      <p><strong>Total:</strong> ${pendingReceipt.total}</p>
+      <p><strong>Multi-background add-on:</strong> ${multiBackgroundText}</p>
+      ${breakdownMarkup}
+      <p><strong>Photo ID:</strong> ${pendingReceipt.photoID}</p>
       <div class="stamp-grid">
         <div class="stamp-area">Paid</div>
         <div class="stamp-area">Email Sent</div>
@@ -496,34 +667,34 @@ function renderReceipt() {
         <div class="stamp-area">Picked Up</div>
         <div class="stamp-area">Photo Taken</div>
       </div>
-      <p class="instruction">Come back at the end of the night to pick up your prints. If you do not receive your email within 2 business days, contact ${kioskConfig.supportEmail}. Questions? Call ${kioskConfig.hotline}.</p>
+      <div class="notes-section">
+        <p><strong>Notes:</strong> ____________________________</p>
+      </div>
+      <p class="instruction">Come back at the end of the night to pick up your prints. If you do not receive your email within 2 business days, contact ${pendingReceipt.supportEmail}. Questions? Call ${pendingReceipt.hotline}.</p>
     </section>
     <section class="receipt-section">
       <h3>Operator Copy</h3>
-      <p><strong>Name:</strong> ${state.partyName}</p>
-      <p><strong>Delivery:</strong> ${state.deliveryMethod}</p>
-      <p><strong>Date:</strong> ${formattedDate}</p>
-      <p><strong>Time:</strong> ${formattedTime}</p>
-      <p><strong>People:</strong> ${state.peopleCount}</p>
-      <p><strong>Background:</strong> ${state.background ? state.background.name : 'Custom Upload'}</p>
-      <p><strong>Background ID:</strong> ${state.background ? state.background.id : 'custom'}</p>
+      <p><strong>Name:</strong> ${pendingReceipt.partyName}</p>
+      <p><strong>Delivery:</strong> ${pendingReceipt.deliveryMethod}</p>
+      <p><strong>Date:</strong> ${pendingReceipt.date}</p>
+      <p><strong>Time:</strong> ${pendingReceipt.time}</p>
+      <p><strong>People:</strong> ${pendingReceipt.peopleCount}</p>
+      <p><strong>Background:</strong> ${pendingReceipt.background}</p>
+      <p><strong>Background ID:</strong> ${pendingReceipt.backgroundId}</p>
       <p><strong>Emails:</strong></p>
       <ul>${emails}</ul>
-      <p><strong>Email Count:</strong> ${state.emailCount}</p>
-      <p><strong>Prints:</strong> ${state.prints}</p>
-      <p><strong>Total:</strong> ${priceText}</p>
-      <p><strong>Notes:</strong> _________________________________</p>
+      <p><strong>Email Count:</strong> ${pendingReceipt.emailCount}</p>
+      <p><strong>Prints:</strong> ${pendingReceipt.prints}</p>
+      <p><strong>Total:</strong> ${pendingReceipt.total}</p>
+      <p><strong>Multi-background add-on:</strong> ${multiBackgroundText}</p>
+      ${breakdownMarkup}
+      <p><strong>Photo ID:</strong> <span class="large-photo-id">${pendingReceipt.photoID}</span></p>
+      <div class="notes-section">
+        <p><strong>Notes:</strong> ____________________________</p>
+      </div>
       ${state.selfieData ? `<img class="selfie-thumbnail" src="${state.selfieData}" alt="Customer quick selfie" />` : ''}
-      <div class="large-number">${customerNumber}</div>
     </section>
   `;
-}
-
-function nextCustomerNumber() {
-  const key = 'greenscreen-customer-number';
-  const current = Number(localStorage.getItem(key) || '1000') + 1;
-  localStorage.setItem(key, current);
-  return current;
 }
 
 function resetKiosk() {
@@ -539,18 +710,22 @@ function resetKiosk() {
     emailCount: 0,
     emails: [],
     paymentMethod: null,
-    selfieData: null
+    selfieData: null,
+    multipleBackgrounds: false
   });
 
   document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
-  document.getElementById('background-preview').style.backgroundImage = '';
-  document.getElementById('background-preview').textContent = 'Choose a background';
+  updateBackgroundPreview('');
   document.querySelectorAll('.touch-selector').forEach(selector => selector.querySelectorAll('.touch-option').forEach(btn => btn.classList.remove('selected')));
   document.getElementById('party-name').value = '';
-  document.getElementById('email-entry-container').innerHTML = '';
+  document.getElementById('emailInputs').innerHTML = '';
   document.getElementById('review-summary').innerHTML = '';
   document.getElementById('custom-background-input').value = '';
   document.getElementById('custom-background-use').disabled = true;
+  pendingReceipt = null;
+  reflectMultiBackgroundState();
+  updatePricingDisplay();
+  updateProgress('screen-welcome');
   showScreen('screen-welcome');
 }
 
@@ -570,4 +745,301 @@ function formatCurrency(amount, currency = 'USD') {
   return new Intl.NumberFormat('en-US', { style: 'currency', currency }).format(amount);
 }
 
-window.addEventListener('load', init);
+function collectEmailAddresses() {
+  const container = document.getElementById('emailInputs');
+  const inputs = Array.from(container.querySelectorAll('input'));
+  const addresses = inputs.map(input => input.value.trim()).filter(Boolean);
+  state.emails = inputs.map(input => input.value.trim());
+  return addresses;
+}
+
+function getFeeValue(key, fallback) {
+  if (!appConfig) {
+    return fallback;
+  }
+  const value = Number(appConfig[key]);
+  if (Number.isFinite(value) && value >= 0) {
+    return value;
+  }
+  return fallback;
+}
+
+function calculatePriceDetails() {
+  if (!appConfig) {
+    return null;
+  }
+  const currency = appConfig.currency || 'USD';
+  const basePrice = Number(appConfig.price || 0);
+  const perPrintFee = getFeeValue('printFee', PRICING_DEFAULTS.printFee);
+  const perEmailFee = getFeeValue('emailFee', PRICING_DEFAULTS.emailFee);
+  const multiBackgroundFee = getFeeValue('multiBackgroundFee', PRICING_DEFAULTS.multiBackgroundFee);
+
+  const prints = Math.max(Number(state.prints || 0), 0);
+  const emails = Math.max(Number(state.emailCount || 0), 0);
+
+  const printCost = prints * perPrintFee;
+  const emailCost = emails * perEmailFee;
+  const multiBackgroundCost = state.multipleBackgrounds ? multiBackgroundFee : 0;
+  const total = basePrice + printCost + emailCost + multiBackgroundCost;
+
+  return {
+    currency,
+    basePrice,
+    perPrintFee,
+    perEmailFee,
+    multiBackgroundFee,
+    prints,
+    emails,
+    printCost,
+    emailCost,
+    multiBackgroundCost,
+    total
+  };
+}
+
+function updatePricingDisplay() {
+  if (!appConfig) {
+    return;
+  }
+  const details = calculatePriceDetails();
+  if (!details) {
+    return;
+  }
+
+  const headerPrice = document.getElementById('eventPrice');
+  if (headerPrice) {
+    if (details.basePrice) {
+      headerPrice.textContent = `Starting at ${formatCurrency(details.basePrice, details.currency)}`;
+    } else {
+      headerPrice.textContent = 'Free Event';
+    }
+  }
+
+  const priceInfo = document.getElementById('price-info');
+  if (priceInfo) {
+    const priceMessage = appConfig.price
+      ? `Base package: ${formatCurrency(details.basePrice, details.currency)}. Prints add ${formatCurrency(details.perPrintFee, details.currency)} each, emails add ${formatCurrency(details.perEmailFee, details.currency)} each, multi-background add-on ${formatCurrency(details.multiBackgroundFee, details.currency)}.`
+      : `Today only: Free photo session! Add-ons: prints ${formatCurrency(details.perPrintFee, details.currency)} each, emails ${formatCurrency(details.perEmailFee, details.currency)} each, multi-background add-on ${formatCurrency(details.multiBackgroundFee, details.currency)}.`;
+    priceInfo.textContent = priceMessage;
+  }
+
+  const paymentNote = document.getElementById('payment-note');
+  if (paymentNote) {
+    const extras = [];
+    extras.push(`Base package ${formatCurrency(details.basePrice, details.currency)}`);
+    if (details.prints > 0) {
+      extras.push(`${details.prints} print${details.prints === 1 ? '' : 's'} = ${formatCurrency(details.printCost, details.currency)}`);
+    } else {
+      extras.push(`${formatCurrency(details.perPrintFee, details.currency)} per print`);
+    }
+    if (details.emails > 0) {
+      extras.push(`${details.emails} email${details.emails === 1 ? '' : 's'} = ${formatCurrency(details.emailCost, details.currency)}`);
+    } else {
+      extras.push(`${formatCurrency(details.perEmailFee, details.currency)} per email`);
+    }
+    extras.push(state.multipleBackgrounds
+      ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
+      : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
+    paymentNote.textContent = `Current total: ${formatCurrency(details.total, details.currency)}. ${extras.join(' • ')}`;
+  }
+
+  const reviewSummary = document.getElementById('review-summary');
+  if (reviewSummary && reviewSummary.innerHTML.trim()) {
+    reviewSummary.innerHTML = generateSummaryHTML();
+  }
+
+  reflectMultiBackgroundState();
+}
+
+function buildPriceBreakdownMarkup(source) {
+  if (!source || !source.charges) {
+    return '';
+  }
+  const { charges } = source;
+  const currency = charges.currency || (appConfig && appConfig.currency) || 'USD';
+  const prints = Number(source.prints || 0);
+  const emails = Number(source.emailCount || 0);
+  const multiSelected = Boolean(source.multipleBackgrounds);
+
+  const lines = [
+    priceBreakdownLine('Base package', charges.basePrice, currency),
+    priceBreakdownLine(`Prints (${prints} × ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} × ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+  ];
+
+  const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
+  const multiAmount = multiSelected ? charges.multiBackgroundCost : 0;
+  lines.push(priceBreakdownLine(multiLabel, multiAmount, currency));
+  lines.push(priceBreakdownLine('Total', charges.total, currency, true));
+
+  return `<div class="price-breakdown"><h4>Price Breakdown</h4><ul>${lines.join('')}</ul></div>`;
+}
+
+function priceBreakdownLine(label, amount, currency, isTotal = false) {
+  const formattedAmount = formatCurrency(Number(amount || 0), currency);
+  return `<li${isTotal ? ' class="total"' : ''}><span>${label}</span><span>${formattedAmount}</span></li>`;
+}
+
+function showConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  modal.classList.remove('hidden');
+}
+
+function hideConfirmModal() {
+  const modal = document.getElementById('confirm-modal');
+  modal.classList.add('hidden');
+}
+
+function finalizeTransaction() {
+  hideConfirmModal();
+  if (!pendingReceipt) return;
+  renderReceipt();
+  const receiptRecord = {
+    customerNumber: pendingReceipt.photoID,
+    name: pendingReceipt.partyName,
+    payment: pendingReceipt.paymentMethod,
+    emailCount: pendingReceipt.emailCount,
+    prints: pendingReceipt.prints,
+    photoID: pendingReceipt.photoID,
+    status: {
+      paid: false,
+      emailed: false,
+      printed: false,
+      pickedUp: false,
+      photoTaken: Boolean(state.selfieData)
+    },
+    delivery: pendingReceipt.deliveryMethod,
+    emails: pendingReceipt.emails,
+    total: pendingReceipt.total,
+    totalRaw: pendingReceipt.totalRaw,
+    charges: pendingReceipt.charges,
+    multipleBackgrounds: pendingReceipt.multipleBackgrounds,
+    createdAt: pendingReceipt.createdAt,
+    people: pendingReceipt.peopleCount
+  };
+  logTransaction(receiptRecord);
+  sendEmails(pendingReceipt.emails);
+  showScreen('screen-receipt');
+}
+
+function logTransaction(receipt) {
+  const existing = JSON.parse(localStorage.getItem('records') || '[]');
+  existing.push(receipt);
+  localStorage.setItem('records', JSON.stringify(existing));
+
+  const blob = new Blob([JSON.stringify(existing, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = 'records.json';
+  link.click();
+  setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+}
+
+function sendEmails(addresses) {
+  addresses.forEach(email => {
+    console.log(`Email sent to ${email}`);
+  });
+}
+
+function generatePhotoID() {
+  return Math.floor(1000 + Math.random() * 9000);
+}
+
+function updateProgress(targetId) {
+  const indicator = document.getElementById('progress-indicator');
+  const index = progressScreens.indexOf(targetId);
+  const totalSteps = progressScreens.length;
+  if (index !== -1) {
+    indicator.textContent = `Step ${index + 1} of ${totalSteps}`;
+  } else if (targetId === 'screen-welcome') {
+    indicator.textContent = `Step 1 of ${totalSteps}`;
+  } else if (targetId === 'screen-receipt') {
+    indicator.textContent = 'Receipt Ready';
+  }
+}
+
+function getBackgroundImage(background) {
+  const gradient = backgroundGradients[background.id];
+  if (gradient) {
+    return gradient;
+  }
+  const file = background.file || '';
+  if (!file) return gradient || '';
+  const imagePath = file.startsWith('http') ? file : `./assets/backgrounds/${file}`;
+  return `url(${imagePath})`;
+}
+
+function setupIdleTimer() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(eventName => {
+    document.addEventListener(eventName, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+}
+
+function resetIdleTimer() {
+  const activeScreen = screenOrder[currentScreenIndex];
+  if (activeScreen === 'screen-welcome') {
+    if (idlePromptVisible) {
+      hideIdlePrompt();
+    }
+    clearTimeout(idleTimeoutId);
+    idleTimeoutId = null;
+    return;
+  }
+  if (idlePromptVisible) {
+    hideIdlePrompt();
+  }
+  clearTimeout(idleTimeoutId);
+  idleTimeoutId = setTimeout(showIdlePrompt, IDLE_TIMEOUT);
+}
+
+function showIdlePrompt() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  idlePromptVisible = true;
+  idleModal.classList.remove('hidden');
+  let remaining = IDLE_PROMPT_DURATION / 1000;
+  updateIdleCountdown(remaining);
+  clearInterval(idleCountdownInterval);
+  idleCountdownInterval = setInterval(() => {
+    remaining -= 1;
+    updateIdleCountdown(Math.max(remaining, 0));
+    if (remaining <= 0) {
+      clearInterval(idleCountdownInterval);
+      idleCountdownInterval = null;
+    }
+  }, 1000);
+  clearTimeout(idlePromptTimeoutId);
+  idlePromptTimeoutId = setTimeout(() => {
+    hideIdlePrompt();
+    resetKiosk();
+  }, IDLE_PROMPT_DURATION);
+}
+
+function hideIdlePrompt() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  idleModal.classList.add('hidden');
+  idlePromptVisible = false;
+  clearTimeout(idlePromptTimeoutId);
+  idlePromptTimeoutId = null;
+  clearInterval(idleCountdownInterval);
+  idleCountdownInterval = null;
+}
+
+function updateIdleCountdown(value) {
+  const countdown = document.getElementById('idle-countdown');
+  if (countdown) {
+    countdown.textContent = `${value}`;
+  }
+}
+
+window.addEventListener('DOMContentLoaded', loadConfig);
