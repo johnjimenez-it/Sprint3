@@ -58,7 +58,7 @@ const backgroundGradients = {
   stage: 'linear-gradient(135deg, #414141, #000000)'
 };
 
-const IDLE_TIMEOUT = 15000;
+const IDLE_TIMEOUT = 25000;
 const IDLE_PROMPT_DURATION = 10000;
 let idleTimeoutId = null;
 let idlePromptTimeoutId = null;
@@ -784,6 +784,15 @@ function setupIdleTimer() {
 }
 
 function resetIdleTimer() {
+  const activeScreen = screenOrder[currentScreenIndex];
+  if (activeScreen === 'screen-welcome') {
+    if (idlePromptVisible) {
+      hideIdlePrompt();
+    }
+    clearTimeout(idleTimeoutId);
+    idleTimeoutId = null;
+    return;
+  }
   if (idlePromptVisible) {
     hideIdlePrompt();
   }
