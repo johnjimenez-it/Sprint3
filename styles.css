@@ -432,6 +432,22 @@ label span {
   box-shadow: 0 30px 60px rgba(0, 0, 0, 0.25);
 }
 
+.idle-modal-content {
+  text-align: center;
+}
+
+#idle-modal .modal-actions {
+  justify-content: center;
+}
+
+#idle-countdown {
+  display: inline-block;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #782F40;
+  margin-top: 0.5rem;
+}
+
 .modal-actions {
   display: flex;
   justify-content: flex-end;

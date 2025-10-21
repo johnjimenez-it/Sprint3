@@ -10,7 +10,6 @@ const screenOrder = [
 
 const progressScreens = [
   'screen-background',
-  'screen-custom-background',
   'screen-party',
   'screen-delivery',
   'screen-payment',
@@ -39,11 +38,32 @@ let appConfig = null;
 let pendingReceipt = null;
 
 const backgroundGradients = {
+  'fsu-garnet': 'linear-gradient(135deg, #782F40, #9b4a54 55%, #CEB888)',
+  'fsu-gold': 'linear-gradient(135deg, #CEB888, #fff1c1)',
+  'fsu-spear': 'linear-gradient(140deg, #782F40 15%, #CEB888 85%)',
+  'fsu-campus': 'linear-gradient(160deg, #1c2b4a, #782F40)',
+  'fsu-stadium': 'linear-gradient(135deg, #0f1a30, #782F40 65%, #CEB888)',
+  'fsu-warpath': 'linear-gradient(135deg, #782F40, #a63d40 60%, #CEB888)',
+  'fsu-torch': 'linear-gradient(140deg, #ffb347 10%, #CEB888 55%, #782F40)',
+  'fsu-heritage': 'linear-gradient(135deg, #1f2235, #782F40 55%, #CEB888)',
+  'nature-forest': 'linear-gradient(135deg, #0b3d20, #2d6a4f)',
+  'nature-ocean': 'linear-gradient(135deg, #0077b6, #00b4d8)',
+  'nature-mountain': 'linear-gradient(135deg, #355070, #6d597a)',
+  'nature-garden': 'linear-gradient(135deg, #6a994e, #a7c957)',
+  'retro-grid': 'linear-gradient(135deg, #ff0080, #7928ca)',
+  'city-night': 'linear-gradient(135deg, #0f2027, #203a43 60%, #2c5364)',
   neon: 'linear-gradient(135deg, #2d1b69, #f72585)',
   cosmic: 'linear-gradient(135deg, #120078, #9d0191)',
   beach: 'linear-gradient(135deg, #ffb347, #ffcc33)',
   stage: 'linear-gradient(135deg, #414141, #000000)'
 };
+
+const IDLE_TIMEOUT = 15000;
+const IDLE_PROMPT_DURATION = 10000;
+let idleTimeoutId = null;
+let idlePromptTimeoutId = null;
+let idlePromptVisible = false;
+let idleCountdownInterval = null;
 
 function showScreen(targetId) {
   const keyboardScreen = document.getElementById('screen-keyboard');
@@ -62,6 +82,7 @@ function showScreen(targetId) {
   });
 
   updateProgress(targetId);
+  resetIdleTimer();
 
   if (targetId === 'screen-review') {
     document.getElementById('review-summary').innerHTML = generateSummaryHTML();
@@ -150,11 +171,19 @@ function init() {
   setupCustomBackground();
   setupSelfie();
   setupKeyboard();
+  setupIdleTimer();
   document.getElementById('confirm-btn').addEventListener('click', onConfirm);
   document.getElementById('print-btn').addEventListener('click', () => window.print());
   document.getElementById('finish-btn').addEventListener('click', resetKiosk);
   document.getElementById('cancel-confirm').addEventListener('click', hideConfirmModal);
   document.getElementById('continue-confirm').addEventListener('click', finalizeTransaction);
+  const idleStayButton = document.getElementById('idle-stay');
+  if (idleStayButton) {
+    idleStayButton.addEventListener('click', () => {
+      hideIdlePrompt();
+      resetIdleTimer();
+    });
+  }
   updateProgress('screen-welcome');
 }
 
@@ -722,10 +751,11 @@ function generatePhotoID() {
 function updateProgress(targetId) {
   const indicator = document.getElementById('progress-indicator');
   const index = progressScreens.indexOf(targetId);
+  const totalSteps = progressScreens.length;
   if (index !== -1) {
-    indicator.textContent = `Step ${index + 1} of ${progressScreens.length}`;
+    indicator.textContent = `Step ${index + 1} of ${totalSteps}`;
   } else if (targetId === 'screen-welcome') {
-    indicator.textContent = 'Step 1 of 6';
+    indicator.textContent = `Step 1 of ${totalSteps}`;
   } else if (targetId === 'screen-receipt') {
     indicator.textContent = 'Receipt Ready';
   }
@@ -740,6 +770,70 @@ function getBackgroundImage(background) {
   if (!file) return gradient || '';
   const imagePath = file.startsWith('http') ? file : `./assets/backgrounds/${file}`;
   return `url(${imagePath})`;
+}
+
+function setupIdleTimer() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  ['click', 'touchstart', 'keydown', 'pointerdown'].forEach(eventName => {
+    document.addEventListener(eventName, resetIdleTimer, { passive: true });
+  });
+  resetIdleTimer();
+}
+
+function resetIdleTimer() {
+  if (idlePromptVisible) {
+    hideIdlePrompt();
+  }
+  clearTimeout(idleTimeoutId);
+  idleTimeoutId = setTimeout(showIdlePrompt, IDLE_TIMEOUT);
+}
+
+function showIdlePrompt() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  idlePromptVisible = true;
+  idleModal.classList.remove('hidden');
+  let remaining = IDLE_PROMPT_DURATION / 1000;
+  updateIdleCountdown(remaining);
+  clearInterval(idleCountdownInterval);
+  idleCountdownInterval = setInterval(() => {
+    remaining -= 1;
+    updateIdleCountdown(Math.max(remaining, 0));
+    if (remaining <= 0) {
+      clearInterval(idleCountdownInterval);
+      idleCountdownInterval = null;
+    }
+  }, 1000);
+  clearTimeout(idlePromptTimeoutId);
+  idlePromptTimeoutId = setTimeout(() => {
+    hideIdlePrompt();
+    resetKiosk();
+  }, IDLE_PROMPT_DURATION);
+}
+
+function hideIdlePrompt() {
+  const idleModal = document.getElementById('idle-modal');
+  if (!idleModal) {
+    return;
+  }
+  idleModal.classList.add('hidden');
+  idlePromptVisible = false;
+  clearTimeout(idlePromptTimeoutId);
+  idlePromptTimeoutId = null;
+  clearInterval(idleCountdownInterval);
+  idleCountdownInterval = null;
+}
+
+function updateIdleCountdown(value) {
+  const countdown = document.getElementById('idle-countdown');
+  if (countdown) {
+    countdown.textContent = `${value}`;
+  }
 }
 
 window.addEventListener('DOMContentLoaded', loadConfig);
