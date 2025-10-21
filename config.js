@@ -27,7 +27,7 @@ export const kioskConfig = {
     }
   ],
   backgroundTheme: "Retro Remix",
-  paymentMethods: ["Cash", "Check", "Credit Card", "Debit Card"],
+  paymentMethods: ["Cash", "Tap to Pay", "Credit Card", "Debit Card"],
   deliveryMethods: ["Email", "Print Pickup", "Both"],
   numberOfPeopleOptions: [1, 2, 3, 4, 5, 6, 7, 8],
   defaultPrintOptions: [0, 1, 2, 3, 4],
