@@ -1,0 +1,17 @@
+{
+  "eventName": "Retro Remix — Retro Arcade Night",
+  "price": 15.0,
+  "currency": "USD",
+  "paymentMethods": ["Cash", "Credit Card", "Debit Card", "Check"],
+  "deliveryMethods": ["Email", "Print Pickup", "Both"],
+  "maxEmails": 5,
+  "maxPrints": 10,
+  "backgrounds": [
+    { "id": "neon", "name": "Neon City", "file": "neon.jpg" },
+    { "id": "cosmic", "name": "Cosmic Swirl", "file": "cosmic.jpg" },
+    { "id": "beach", "name": "Sunset Beach", "file": "beach.jpg" },
+    { "id": "stage", "name": "Classic Stage", "file": "stage.jpg" }
+  ],
+  "hotline": "1-800-555-4757",
+  "supportEmail": "support@greenscreenexpress.com"
+}
