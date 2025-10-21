@@ -9,12 +9,17 @@
 <body>
   <main id="app">
     <header class="app-header">
-      <h1>Green Screen Express</h1>
-      <p class="subtitle">Tap to begin your photo experience</p>
+      <h1 id="eventName">Green Screen Express</h1>
+      <p class="subtitle" id="eventTagline">Tap to begin your photo experience</p>
+      <p class="price" id="eventPrice"></p>
     </header>
 
+    <div id="progress-indicator" class="progress-indicator" aria-live="polite" role="status">
+      Step 1 of 5
+    </div>
+
     <section id="screen-welcome" class="screen active">
-      <button class="primary" id="start-btn">Start</button>
+      <button class="primary" id="start-btn" title="Tap to begin the kiosk flow">Start</button>
       <div class="info-card">
         <h2>Today's Event</h2>
         <p id="event-name"></p>
@@ -24,36 +29,38 @@
 
     <section id="screen-background" class="screen">
       <h2>Select a Background</h2>
-      <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
-      <div class="preview-card">
-        <h3>Preview</h3>
-        <div id="background-preview" class="background-preview">Choose a background</div>
-      </div>
-      <div class="nav-buttons">
-        <button class="secondary" data-prev>Back</button>
-        <button class="primary" data-next>Next</button>
-      </div>
-    </section>
-
-    <section id="screen-custom-background" class="screen">
-      <h2>Custom Background?</h2>
-      <p class="instruction">Need a custom photo? Tap below for tips.</p>
-      <button class="secondary" id="custom-background-help">How to add my own background</button>
-      <div id="custom-background-modal" class="modal hidden" role="dialog" aria-modal="true">
-        <div class="modal-content">
-          <h3>Custom Background Instructions</h3>
-          <ol>
-            <li>Tap "Upload" and select your image from a USB drive.</li>
-            <li>Ensure the image is at least 1920x1080 for best results.</li>
-            <li>Center your group to match the guide shown on screen.</li>
-            <li>Tap "Use Background" to confirm.</li>
-          </ol>
-          <button class="primary" id="modal-close">Got it!</button>
+      <div class="background-layout">
+        <div class="background-column">
+          <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
+          <div class="preview-card">
+            <h3>Preview</h3>
+            <div id="background-preview" class="background-preview">Choose a background</div>
+          </div>
         </div>
-      </div>
-      <div class="upload-card">
-        <input type="file" id="custom-background-input" accept="image/*" />
-        <button class="primary" id="custom-background-use" disabled>Use Background</button>
+        <aside class="custom-background-panel" aria-label="Custom background tools">
+          <h3>Bring Your FSU Spirit</h3>
+          <p class="instruction">Pick a campus classic or upload your own scene.</p>
+          <button class="secondary" id="custom-background-help" title="Tips for adding your own background">How to add my own background</button>
+          <div id="custom-background-modal" class="modal hidden" role="dialog" aria-modal="true">
+            <div class="modal-content">
+              <h3>Custom Background Instructions</h3>
+              <ol>
+                <li>Tap "Upload" and select your image from a USB drive.</li>
+                <li>Use an image that celebrates Garnet &amp; Gold or your favorite landmark.</li>
+                <li>Center your group to match the on-screen guide.</li>
+                <li>Tap "Use Background" to confirm.</li>
+              </ol>
+              <button class="primary" id="modal-close">Got it!</button>
+            </div>
+          </div>
+          <div class="upload-card">
+            <label class="file-picker">
+              <span>Upload your photo</span>
+              <input type="file" id="custom-background-input" accept="image/*" />
+            </label>
+            <button class="primary" id="custom-background-use" disabled title="Use your uploaded background">Use Background</button>
+          </div>
+        </aside>
       </div>
       <div class="nav-buttons">
         <button class="secondary" data-prev>Back</button>
@@ -78,9 +85,9 @@
         <video id="selfie-video" autoplay playsinline></video>
         <canvas id="selfie-canvas" class="hidden"></canvas>
         <div class="selfie-actions">
-          <button class="secondary" id="selfie-start">Enable Camera</button>
-          <button class="primary" id="selfie-capture" disabled>Take Snapshot</button>
-          <button class="secondary" id="selfie-retake" disabled>Retake</button>
+          <button class="secondary" id="selfie-start" title="Enable the built-in camera">Enable Camera</button>
+          <button class="primary" id="selfie-capture" disabled title="Capture a quick selfie">Take Snapshot</button>
+          <button class="secondary" id="selfie-retake" disabled title="Retake the selfie">Retake</button>
         </div>
       </div>
       <div class="nav-buttons">
@@ -105,7 +112,7 @@
           <div class="touch-selector" id="email-count"></div>
         </label>
       </div>
-      <div id="email-entry-container" class="email-container"></div>
+      <div id="emailInputs" class="email-container"></div>
       <div class="nav-buttons">
         <button class="secondary" data-prev>Back</button>
         <button class="primary" data-next>Next</button>
@@ -125,15 +132,15 @@
     <section id="screen-review" class="screen">
       <h2>Review Your Order</h2>
       <div id="review-summary" class="summary-card"></div>
-      <button class="primary" id="confirm-btn">Confirm &amp; Print Receipt</button>
+      <button class="primary" id="confirm-btn" title="Review and confirm your order">Confirm &amp; Print Receipt</button>
       <button class="secondary" data-prev>Back</button>
     </section>
 
     <section id="screen-receipt" class="screen">
       <h2>Receipt</h2>
       <div class="receipt" id="receipt-output"></div>
-      <button class="primary" id="print-btn">Print Receipt</button>
-      <button class="secondary" id="finish-btn">Start Over</button>
+      <button class="primary" id="print-btn" title="Send both copies to the printer">Print Receipt</button>
+      <button class="secondary" id="finish-btn" title="Restart the kiosk flow">Start Over</button>
     </section>
 
     <section id="screen-keyboard" class="screen keyboard-screen">
@@ -155,7 +162,27 @@
     <button class="touch-option"></button>
   </template>
 
-  <script src="config.js"></script>
-  <script src="script.js" type="module"></script>
+  <div id="confirm-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
+    <div class="modal-content">
+      <h3 id="confirm-title">Ready to print?</h3>
+      <p>Double-check the details before printing. Continue when you are ready.</p>
+      <div class="modal-actions">
+        <button class="secondary" id="cancel-confirm">Cancel</button>
+        <button class="primary" id="continue-confirm">Looks Good</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="idle-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="idle-title">
+    <div class="modal-content idle-modal-content">
+      <h3 id="idle-title">Are you still there?</h3>
+      <p>We’ll return to the welcome screen in <span id="idle-countdown">10</span> seconds.</p>
+      <div class="modal-actions">
+        <button class="primary" id="idle-stay">I’m still here</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="script.js" defer></script>
 </body>
 </html>

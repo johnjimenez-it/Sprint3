@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operator Dashboard</title>
+  <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+      background: #0f172a;
+      color: #f8fbff;
+    }
+    main {
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(17, 36, 51, 0.65);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1.5rem;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    th, td {
+      padding: 0.75rem 1rem;
+      text-align: left;
+    }
+    thead {
+      background: rgba(15, 23, 42, 0.75);
+    }
+    tbody tr:nth-child(even) {
+      background: rgba(15, 23, 42, 0.35);
+    }
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.55);
+    }
+    tbody tr td button {
+      margin: 0.25rem 0.25rem 0;
+      padding: 0.35rem 0.75rem;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    tbody tr td button.completed {
+      background: #20bf55;
+      color: #fff;
+    }
+    tbody tr td button:not(.completed) {
+      background: rgba(255, 255, 255, 0.15);
+      color: #f8fbff;
+    }
+    #exportCsv {
+      margin-top: 1rem;
+    }
+    .status-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+    }
+    .meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h2>Operator Panel</h2>
+    <div class="meta">
+      <label for="pin">Enter Operator PIN</label>
+      <input type="password" id="pin" placeholder="Enter PIN" />
+      <button id="loginBtn" class="primary">Login</button>
+      <button id="exportCsv" class="secondary" style="display:none;">Export CSV</button>
+    </div>
+
+    <div id="dashboard" style="display:none;">
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th>Customer #</th>
+            <th>Name</th>
+            <th>Payment</th>
+            <th>Emails</th>
+            <th>Prints</th>
+            <th>Photo ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </main>
+
+  <script>
+    const PIN = "1234";
+    const loginBtn = document.getElementById("loginBtn");
+    const dashboard = document.getElementById("dashboard");
+    const exportBtn = document.getElementById("exportCsv");
+
+    loginBtn.addEventListener("click", () => {
+      const input = document.getElementById("pin").value;
+      if (input === PIN) {
+        dashboard.style.display = "block";
+        exportBtn.style.display = "inline-flex";
+        loadRecords();
+      } else {
+        alert("Invalid PIN");
+      }
+    });
+
+    exportBtn.addEventListener("click", () => {
+      const rows = Array.from(document.querySelectorAll('#recordsTable tbody tr'));
+      const headers = ["Customer #","Name","Payment","Emails","Prints","Photo ID","Status"];
+      const csv = [headers.join(',')];
+      rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const statusLabels = Array.from(cells[6].querySelectorAll('button'))
+          .map(btn => `${btn.dataset.action}:${btn.classList.contains('completed') ? 'done' : 'pending'}`)
+          .join('|');
+        const values = [
+          cells[0].textContent.trim(),
+          cells[1].textContent.trim(),
+          cells[2].textContent.trim(),
+          cells[3].textContent.trim(),
+          cells[4].textContent.trim(),
+          cells[5].textContent.trim(),
+          statusLabels
+        ];
+        csv.push(values.join(','));
+      });
+      const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'records.csv';
+      link.click();
+      setTimeout(() => URL.revokeObjectURL(link.href), 1000);
+    });
+
+    async function loadRecords() {
+      try {
+        const res = await fetch('records.json');
+        if (!res.ok) {
+          throw new Error('Missing records file');
+        }
+        const data = await res.json();
+        renderRecords(data);
+      } catch (error) {
+        const stored = JSON.parse(localStorage.getItem('records') || '[]');
+        renderRecords(stored);
+      }
+    }
+
+    function renderRecords(data) {
+      const tbody = document.querySelector('#recordsTable tbody');
+      tbody.innerHTML = data.map(record => {
+        const emails = Array.isArray(record.emails) && record.emails.length ? record.emails.join(' | ') : '—';
+        return `
+          <tr>
+            <td>${record.customerNumber || record.photoID || ''}</td>
+            <td>${record.name || ''}</td>
+            <td>${record.payment || ''}</td>
+            <td>${emails}</td>
+            <td>${record.prints ?? ''}</td>
+            <td>${record.photoID || record.customerNumber || ''}</td>
+            <td class="status-actions">
+              ${renderStatusButtons(record)}
+            </td>
+          </tr>`;
+      }).join('');
+      attachStatusListeners();
+    }
+
+    function renderStatusButtons(record) {
+      const statusMap = {
+        'Paid': 'paid',
+        'Email Sent': 'emailed',
+        'Printed': 'printed',
+        'Picked Up': 'pickedUp',
+        'Photo Taken': 'photoTaken'
+      };
+      return Object.entries(statusMap).map(([label, key]) => {
+        const completed = record.status && record.status[key];
+        return `<button data-action="${key}" class="${completed ? 'completed' : ''}">${label}</button>`;
+      }).join('');
+    }
+
+    function attachStatusListeners() {
+      document.querySelectorAll('.status-actions button').forEach(button => {
+        button.addEventListener('click', () => {
+          button.classList.toggle('completed');
+        });
+      });
+    }
+  </script>
+</body>
+</html>
