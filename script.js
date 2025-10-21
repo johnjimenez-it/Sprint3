@@ -10,6 +10,7 @@ const screenOrder = [
 
 const progressScreens = [
   'screen-background',
+  'screen-custom-background',
   'screen-party',
   'screen-delivery',
   'screen-payment',
@@ -38,11 +39,6 @@ let appConfig = null;
 let pendingReceipt = null;
 
 const backgroundGradients = {
-  'fsu-garnet': 'linear-gradient(135deg, #782F40, #9b4a54 55%, #CEB888)',
-  'fsu-gold': 'linear-gradient(135deg, #CEB888, #fff1c1)',
-  'fsu-spear': 'linear-gradient(140deg, #782F40 15%, #CEB888 85%)',
-  'fsu-campus': 'linear-gradient(160deg, #1c2b4a, #782F40)',
-  'fsu-stadium': 'linear-gradient(135deg, #0f1a30, #782F40 65%, #CEB888)',
   neon: 'linear-gradient(135deg, #2d1b69, #f72585)',
   cosmic: 'linear-gradient(135deg, #120078, #9d0191)',
   beach: 'linear-gradient(135deg, #ffb347, #ffcc33)',
@@ -726,11 +722,10 @@ function generatePhotoID() {
 function updateProgress(targetId) {
   const indicator = document.getElementById('progress-indicator');
   const index = progressScreens.indexOf(targetId);
-  const totalSteps = progressScreens.length;
   if (index !== -1) {
-    indicator.textContent = `Step ${index + 1} of ${totalSteps}`;
+    indicator.textContent = `Step ${index + 1} of ${progressScreens.length}`;
   } else if (targetId === 'screen-welcome') {
-    indicator.textContent = `Step 1 of ${totalSteps}`;
+    indicator.textContent = 'Step 1 of 6';
   } else if (targetId === 'screen-receipt') {
     indicator.textContent = 'Receipt Ready';
   }
