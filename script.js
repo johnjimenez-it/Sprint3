@@ -1,7 +1,6 @@
 const screenOrder = [
   'screen-welcome',
   'screen-background',
-  'screen-custom-background',
   'screen-party',
   'screen-delivery',
   'screen-payment',
@@ -303,6 +302,9 @@ function setupCustomBackground() {
   const modalClose = document.getElementById('modal-close');
   const fileInput = document.getElementById('custom-background-input');
   const useButton = document.getElementById('custom-background-use');
+  if (!helpButton || !modal || !modalClose || !fileInput || !useButton) {
+    return;
+  }
   useButton.disabled = true;
 
   helpButton.addEventListener('click', () => modal.classList.remove('hidden'));

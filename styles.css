@@ -151,6 +151,57 @@ body {
   gap: 1rem;
 }
 
+.background-layout {
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+  align-items: start;
+}
+
+.background-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.custom-background-panel {
+  background: #fff8ed;
+  border: 2px solid #f3d8a5;
+  border-radius: 20px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  box-shadow: 0 20px 40px rgba(120, 47, 64, 0.12);
+}
+
+.custom-background-panel h3 {
+  margin: 0;
+  color: #782f40;
+}
+
+.custom-background-panel .secondary {
+  align-self: flex-start;
+}
+
+.file-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-weight: 600;
+  color: #782f40;
+}
+
+.file-picker input[type="file"] {
+  font-size: 1rem;
+}
+
+@media (max-width: 900px) {
+  .background-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
 .background-option {
   position: relative;
   padding: 1.5rem;
