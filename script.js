@@ -2,6 +2,7 @@ const screenOrder = [
   'screen-welcome',
   'screen-background',
   'screen-party',
+  'screen-selfie',
   'screen-delivery',
   'screen-payment',
   'screen-review',
@@ -11,6 +12,7 @@ const screenOrder = [
 const progressScreens = [
   'screen-background',
   'screen-party',
+  'screen-selfie',
   'screen-delivery',
   'screen-payment',
   'screen-review'
@@ -19,6 +21,7 @@ const progressScreens = [
 const progressLabels = {
   'screen-background': 'Background',
   'screen-party': 'Party',
+  'screen-selfie': 'Selfie',
   'screen-delivery': 'Delivery',
   'screen-payment': 'Payment',
   'screen-review': 'Review'
@@ -115,7 +118,7 @@ function showScreen(targetId) {
 function goToNextScreen() {
   const nextIndex = Math.min(currentScreenIndex + 1, screenOrder.length - 1);
   if (validateScreen(screenOrder[currentScreenIndex])) {
-    if (screenOrder[currentScreenIndex] === 'screen-party') {
+    if (screenOrder[currentScreenIndex] === 'screen-selfie') {
       stopSelfie();
     }
     showScreen(screenOrder[nextIndex]);
