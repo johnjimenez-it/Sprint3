@@ -389,7 +389,17 @@ body {
 }
 
 .background-preview {
-  height: 240px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+.background-preview.multi {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.preview-slot {
+  min-height: 220px;
   border-radius: 16px;
   background: #e6eef5;
   display: flex;
@@ -397,8 +407,19 @@ body {
   justify-content: center;
   font-weight: 600;
   color: #446177;
+  text-align: center;
+  padding: 1rem;
   background-size: cover;
   background-position: center;
+  transition: background-image 0.3s ease;
+}
+
+.preview-slot.secondary {
+  font-size: 1rem;
+}
+
+.preview-slot.hidden {
+  display: none;
 }
 
 .form-grid {
