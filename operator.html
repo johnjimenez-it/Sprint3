@@ -86,8 +86,24 @@
       background: rgba(30, 46, 74, 0.9);
       transform: translateY(-1px);
     }
-    #exportCsv {
-      margin-top: 1rem;
+    .panel-header {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .table-panel h3,
+    .details-panel h3 {
+      margin-top: 0;
+      margin-bottom: 0.75rem;
+      font-size: 1.2rem;
+    }
+    tbody tr {
+      cursor: pointer;
+      transition: background 0.3s ease;
+    }
+    tbody tr.selected {
+      outline: 2px solid rgba(32, 191, 85, 0.7);
+      outline-offset: -2px;
     }
     .dashboard-grid {
       display: grid;
@@ -407,6 +423,165 @@
       }
       table {
         min-width: 640px;
+      }
+    }
+    .details-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .details-empty {
+      text-align: center;
+      padding: 3rem 1rem;
+      border: 1px dashed rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      opacity: 0.7;
+    }
+    .details-body.hidden {
+      display: none;
+    }
+    .details-body {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .details-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .details-header h3 {
+      margin: 0;
+      font-size: 1.45rem;
+    }
+    .details-header .badge {
+      padding: 0.25rem 0.6rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .preview-card {
+      position: relative;
+      border-radius: 18px;
+      overflow: hidden;
+      min-height: 220px;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .preview-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .preview-card .placeholder {
+      text-align: center;
+      font-size: 0.95rem;
+      opacity: 0.6;
+      padding: 1rem;
+    }
+    .detail-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 0.75rem;
+    }
+    .detail-meta-item {
+      background: rgba(15, 23, 42, 0.65);
+      border-radius: 14px;
+      padding: 0.75rem 0.85rem;
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .detail-meta-item span {
+      display: block;
+    }
+    .meta-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      opacity: 0.6;
+      margin-bottom: 0.25rem;
+    }
+    .meta-value {
+      font-size: 1.05rem;
+      font-weight: 600;
+    }
+    .detail-section h4 {
+      margin: 0 0 0.5rem;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.75;
+    }
+    .detail-section ul {
+      margin: 0;
+      padding-left: 1.2rem;
+      line-height: 1.6;
+    }
+    .detail-section textarea {
+      width: 100%;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(15, 23, 42, 0.8);
+      color: #f8fbff;
+      padding: 0.75rem;
+      resize: vertical;
+      min-height: 120px;
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+    .detail-section textarea:focus {
+      outline: none;
+      border-color: rgba(32, 191, 85, 0.5);
+      box-shadow: 0 0 0 2px rgba(32, 191, 85, 0.25);
+    }
+    .notes-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      font-size: 0.7rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .notes-pill.muted {
+      opacity: 0.5;
+    }
+    .notes-cell {
+      min-width: 120px;
+    }
+    .progress-bar {
+      position: relative;
+      height: 8px;
+      border-radius: 999px;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.08);
+      margin-top: 0.5rem;
+    }
+    .progress-bar .fill {
+      height: 100%;
+      background: linear-gradient(90deg, #20bf55, #01baef);
+      width: 0;
+      transition: width 0.4s ease;
+    }
+    .preview-card .placeholder.overlay {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 0.85rem 1.1rem;
+      border-radius: 12px;
+    }
+    @media (max-width: 960px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .details-panel {
+        order: -1;
       }
     }
   </style>
@@ -828,6 +1003,136 @@
           button.classList.toggle('completed', Boolean(record.status[entry.key]));
         }
       });
+    }
+
+    function updateNotesPill(index) {
+      const row = tableBody.querySelector(`tr[data-index="${index}"]`);
+      if (!row) return;
+      const cell = row.querySelector('.notes-cell');
+      if (cell) {
+        cell.innerHTML = formatNotesPill(recordsCache[index].notes);
+      }
+    }
+
+    function formatProgress(record) {
+      const completed = countCompleted(record);
+      const total = STATUS_ENTRIES.length;
+      return `${completed}/${total} Complete`;
+    }
+
+    function countCompleted(record) {
+      return STATUS_ENTRIES.reduce((count, entry) => count + (record.status[entry.key] ? 1 : 0), 0);
+    }
+
+    function normalizeRecords(data = []) {
+      return data.map(record => {
+        const status = { ...DEFAULT_STATUS, ...(record.status || {}) };
+        return {
+          ...record,
+          status,
+          notes: typeof record.notes === 'string' ? record.notes : '',
+          emails: Array.isArray(record.emails) ? record.emails : (record.emails ? [record.emails] : []),
+          backgroundImage: record.backgroundImage || '',
+          selfieData: record.selfieData || ''
+        };
+      });
+    }
+
+    function mergeRecords(primary = [], secondary = []) {
+      const secondaryMap = new Map();
+      secondary.forEach(record => {
+        const key = getRecordKey(record);
+        if (key) {
+          secondaryMap.set(key, record);
+        }
+      });
+
+      const merged = primary.map(record => {
+        const key = getRecordKey(record);
+        const fallback = key ? secondaryMap.get(key) : undefined;
+        if (!fallback) {
+          return record;
+        }
+        const status = { ...(record.status || {}), ...(fallback.status || {}) };
+        return {
+          ...record,
+          status,
+          notes: typeof fallback.notes === 'string' ? fallback.notes : (record.notes || ''),
+          backgroundImage: record.backgroundImage || fallback.backgroundImage || '',
+          selfieData: record.selfieData || fallback.selfieData || '',
+          emails: (record.emails && record.emails.length) ? record.emails : fallback.emails
+        };
+      });
+
+      secondary.forEach(record => {
+        const key = getRecordKey(record);
+        if (!key) return;
+        if (!merged.some(existing => getRecordKey(existing) === key)) {
+          merged.push(record);
+        }
+      });
+
+      return merged;
+    }
+
+    function getRecordKey(record) {
+      if (!record) return null;
+      if (record.photoID) return String(record.photoID);
+      if (record.customerNumber) return String(record.customerNumber);
+      if (record.createdAt) return String(record.createdAt);
+      return null;
+    }
+
+    function updateStoredRecords() {
+      try {
+        localStorage.setItem('records', JSON.stringify(recordsCache));
+      } catch (error) {
+        console.warn('Unable to persist records', error);
+      }
+    }
+
+    function readStoredRecords() {
+      try {
+        return JSON.parse(localStorage.getItem('records') || '[]');
+      } catch (error) {
+        console.warn('Unable to read stored records', error);
+        return [];
+      }
+    }
+
+    function escapeHtml(value) {
+      const text = value == null ? '' : String(value);
+      return text
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+
+    function formatNotesPill(notes) {
+      if (!notes || !notes.trim()) {
+        return '<span class="notes-pill muted">Add note</span>';
+      }
+      const preview = notes.trim().length > 32 ? `${notes.trim().slice(0, 32)}…` : notes.trim();
+      return `<span class="notes-pill">${escapeHtml(preview)}</span>`;
+    }
+
+    function formatTimestamp(value) {
+      if (!value) return '—';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) {
+        return value;
+      }
+      return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
+    }
+
+    function toCsvValue(value) {
+      const text = value == null ? '' : String(value);
+      if (/[",\n]/.test(text)) {
+        return '"' + text.replace(/"/g, '""') + '"';
+      }
+      return text;
     }
 
     function updateNotesPill(index) {
