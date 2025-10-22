@@ -14,12 +14,8 @@
       <p class="price" id="eventPrice"></p>
     </header>
 
-    <div id="progress-indicator" class="progress-indicator" aria-live="polite">
-      <div class="progress-track" aria-hidden="true">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-      <ol class="progress-steps" id="progress-steps"></ol>
-      <div class="progress-status" id="progress-status" role="status">Step 1 of 5</div>
+    <div id="progress-indicator" class="progress-indicator" aria-live="polite" role="status">
+      Step 1 of 5
     </div>
 
     <section id="screen-welcome" class="screen active">
@@ -39,6 +35,11 @@
           <div class="preview-card">
             <h3>Preview</h3>
             <div id="background-preview" class="background-preview">Choose a background</div>
+          </div>
+          <div class="addon-card" aria-live="polite">
+            <h3>Need multiple backgrounds?</h3>
+            <p class="instruction" id="multi-background-note">Add a second background setup for an additional fee.</p>
+            <button class="secondary" id="multi-background-toggle" type="button" aria-pressed="false">Add Multi-Background Package (+$10)</button>
           </div>
         </div>
         <aside class="custom-background-panel" aria-label="Custom background tools">

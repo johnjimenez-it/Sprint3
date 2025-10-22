@@ -7,186 +7,61 @@
   <link rel="stylesheet" href="styles.css">
   <style>
     body {
-      margin: 0;
-      background: radial-gradient(circle at top, #1e2a45, #0b1324 55%);
+      background: #0f172a;
       color: #f8fbff;
-      font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      min-height: 100vh;
     }
     main {
-      width: min(1200px, 94vw);
-      margin: 2.5rem auto;
-      padding: 2rem 2.5rem 2.75rem;
-      background: rgba(10, 18, 32, 0.82);
-      border-radius: 28px;
-      box-shadow: 0 30px 80px rgba(3, 10, 26, 0.55);
-      backdrop-filter: blur(18px);
-    }
-    .table-wrapper {
-      margin-top: 1.25rem;
-      border-radius: 18px;
-      overflow: hidden;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: linear-gradient(135deg, rgba(22, 33, 54, 0.9), rgba(12, 20, 36, 0.9));
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-    }
-    .table-wrapper-inner {
-      max-height: 520px;
-      overflow: auto;
-      scrollbar-width: thin;
-      scrollbar-color: rgba(122, 168, 255, 0.35) rgba(15, 23, 42, 0.6);
-    }
-    .table-wrapper-inner::-webkit-scrollbar {
-      width: 8px;
-      height: 8px;
-    }
-    .table-wrapper-inner::-webkit-scrollbar-track {
-      background: rgba(15, 23, 42, 0.65);
-    }
-    .table-wrapper-inner::-webkit-scrollbar-thumb {
-      background: rgba(122, 168, 255, 0.35);
-      border-radius: 999px;
+      max-width: 960px;
+      margin: 2rem auto;
+      padding: 2rem;
+      background: rgba(17, 36, 51, 0.65);
+      border-radius: 24px;
+      box-shadow: 0 30px 60px rgba(0, 0, 0, 0.35);
     }
     table {
       width: 100%;
-      min-width: 780px;
       border-collapse: collapse;
+      margin-top: 1.5rem;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 16px;
+      overflow: hidden;
     }
     th, td {
       padding: 0.75rem 1rem;
       text-align: left;
-      vertical-align: top;
-    }
-    td:last-child {
-      min-width: 210px;
-    }
-    th {
-      font-size: 0.85rem;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      opacity: 0.75;
     }
     thead {
-      background: rgba(12, 20, 36, 0.94);
-      position: sticky;
-      top: 0;
-      z-index: 2;
-      box-shadow: 0 6px 14px rgba(3, 10, 26, 0.45);
-    }
-    tbody tr {
-      background: rgba(19, 30, 49, 0.78);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
-      transition: background 0.25s ease, transform 0.2s ease;
-      cursor: pointer;
+      background: rgba(15, 23, 42, 0.75);
     }
     tbody tr:nth-child(even) {
-      background: rgba(17, 27, 44, 0.85);
+      background: rgba(15, 23, 42, 0.35);
     }
-    tbody tr:hover {
-      background: rgba(30, 46, 74, 0.9);
-      transform: translateY(-1px);
+    tbody tr:nth-child(odd) {
+      background: rgba(15, 23, 42, 0.55);
     }
-    .panel-header {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .table-panel h3,
-    .details-panel h3 {
-      margin-top: 0;
-      margin-bottom: 0.75rem;
-      font-size: 1.2rem;
-    }
-    tbody tr {
+    tbody tr td button {
+      margin: 0.25rem 0.25rem 0;
+      padding: 0.35rem 0.75rem;
+      border-radius: 12px;
+      border: none;
       cursor: pointer;
-      transition: background 0.3s ease;
+      font-weight: 600;
     }
-    tbody tr.selected {
-      outline: 2px solid rgba(32, 191, 85, 0.7);
-      outline-offset: -2px;
+    tbody tr td button.completed {
+      background: #20bf55;
+      color: #fff;
     }
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: minmax(0, 1.65fr) minmax(320px, 1fr);
-      align-items: start;
-      gap: 2rem;
-      margin-top: 2.25rem;
+    tbody tr td button:not(.completed) {
+      background: rgba(255, 255, 255, 0.15);
+      color: #f8fbff;
     }
-    .table-panel,
-    .details-panel {
-      background: rgba(15, 23, 42, 0.5);
-      border-radius: 22px;
-      padding: 1.75rem;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
-    }
-    .table-panel {
-      display: flex;
-      flex-direction: column;
-    }
-    .panel-header {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    .panel-header p {
-      margin: 0;
-      font-size: 0.85rem;
-      color: rgba(248, 251, 255, 0.68);
-    }
-    .table-panel h3,
-    .details-panel h3 {
-      margin-top: 0;
-      margin-bottom: 0.75rem;
-      font-size: 1.2rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    tbody tr.selected {
-      outline: 2px solid rgba(79, 209, 197, 0.75);
-      outline-offset: -2px;
-      box-shadow: 0 0 0 4px rgba(79, 209, 197, 0.15);
+    #exportCsv {
+      margin-top: 1rem;
     }
     .status-actions {
       display: flex;
       flex-wrap: wrap;
-      gap: 0.35rem;
-    }
-    .status-progress {
-      margin-top: 0.5rem;
-      font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.14em;
-      opacity: 0.75;
-      font-weight: 600;
-    }
-    .details-panel .status-progress {
-      font-size: 0.78rem;
-      letter-spacing: 0.12em;
-    }
-    .status-btn {
-      margin: 0.15rem 0;
-      padding: 0.42rem 0.9rem;
-      border-radius: 999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      cursor: pointer;
-      font-weight: 600;
-      font-size: 0.78rem;
-      background: rgba(255, 255, 255, 0.08);
-      color: #f8fbff;
-      transition: all 0.25s ease;
-    }
-    .status-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-    }
-    .status-btn.completed {
-      background: rgba(79, 209, 197, 0.18);
-      border-color: rgba(79, 209, 197, 0.55);
-      color: #9ef2e9;
-      box-shadow: 0 0 12px rgba(79, 209, 197, 0.3);
-    }
-    .status-btn.detail {
-      padding: 0.5rem 1rem;
-      font-size: 0.8rem;
+      gap: 0.25rem;
     }
     .meta {
       display: flex;
@@ -194,401 +69,12 @@
       align-items: center;
       flex-wrap: wrap;
       gap: 0.5rem;
-      padding: 1rem 1.25rem;
-      background: rgba(12, 20, 36, 0.65);
-      border-radius: 18px;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.04);
-    }
-    .meta label {
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      font-size: 0.75rem;
-      opacity: 0.75;
-    }
-    .meta input {
-      flex: 1 1 180px;
-      background: rgba(10, 18, 32, 0.85);
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      border-radius: 14px;
-      padding: 0.65rem 0.9rem;
-      color: #f8fbff;
-      font-size: 0.95rem;
-    }
-    .meta input:focus {
-      outline: none;
-      border-color: rgba(79, 209, 197, 0.6);
-      box-shadow: 0 0 0 2px rgba(79, 209, 197, 0.2);
-    }
-    .meta button {
-      min-width: 140px;
-      font-size: 0.95rem;
-      border-radius: 14px;
-      padding: 0.6rem 1.25rem;
-    }
-    .details-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1.2rem;
-    }
-    .details-empty {
-      text-align: center;
-      padding: 3rem 1rem;
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
-      opacity: 0.75;
-      background: rgba(10, 18, 32, 0.6);
-    }
-    .details-body.hidden {
-      display: none;
-    }
-    .details-body {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-    .details-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    .details-header h3 {
-      margin: 0;
-      font-size: 1.45rem;
-    }
-    .details-header .badge {
-      padding: 0.25rem 0.6rem;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .preview-card {
-      position: relative;
-      border-radius: 20px;
-      overflow: hidden;
-      min-height: 240px;
-      background: rgba(15, 23, 42, 0.68);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-    }
-    .preview-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .preview-card .placeholder {
-      text-align: center;
-      font-size: 0.95rem;
-      opacity: 0.6;
-      padding: 1rem;
-    }
-    .detail-meta-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0.9rem;
-    }
-    .detail-meta-item {
-      background: rgba(15, 23, 42, 0.65);
-      border-radius: 14px;
-      padding: 0.75rem 0.85rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .detail-meta-item span {
-      display: block;
-    }
-    .meta-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      opacity: 0.6;
-      margin-bottom: 0.25rem;
-    }
-    .meta-value {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-    .detail-section h4 {
-      margin: 0 0 0.5rem;
-      font-size: 0.95rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.75;
-    }
-    .detail-section {
-      background: rgba(10, 18, 32, 0.72);
-      border-radius: 18px;
-      padding: 1.1rem 1.25rem;
-      border: 1px solid rgba(255, 255, 255, 0.04);
-      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
-    }
-    .detail-section + .detail-section {
-      margin-top: 0.75rem;
-    }
-    .detail-section ul {
-      margin: 0;
-      padding-left: 1.2rem;
-      line-height: 1.6;
-    }
-    .detail-section textarea {
-      width: 100%;
-      border-radius: 16px;
-      border: 1px solid rgba(255, 255, 255, 0.14);
-      background: rgba(10, 18, 32, 0.88);
-      color: #f8fbff;
-      padding: 0.85rem 1rem;
-      resize: vertical;
-      min-height: 140px;
-      font-family: inherit;
-      font-size: 0.95rem;
-    }
-    .detail-section textarea:focus {
-      outline: none;
-      border-color: rgba(79, 209, 197, 0.6);
-      box-shadow: 0 0 0 2px rgba(79, 209, 197, 0.25);
-    }
-    .notes-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.65rem;
-      border-radius: 999px;
-      background: rgba(122, 168, 255, 0.18);
-      border: 1px solid rgba(122, 168, 255, 0.35);
-      font-size: 0.7rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      font-weight: 600;
-    }
-    .notes-pill.muted {
-      opacity: 0.5;
-    }
-    .notes-cell {
-      min-width: 120px;
-    }
-    .progress-bar {
-      position: relative;
-      height: 8px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.1);
-      margin-top: 0.65rem;
-    }
-    .progress-bar .fill {
-      height: 100%;
-      background: linear-gradient(90deg, #4fd1c5, #63b3ed);
-      width: 0;
-      transition: width 0.4s ease;
-    }
-    .preview-card .placeholder.overlay {
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.85rem 1.1rem;
-      border-radius: 12px;
-    }
-    .table-panel .status-actions {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-      gap: 0.4rem;
-    }
-    .table-panel .status-btn {
-      justify-content: center;
-      text-align: center;
-    }
-    .details-panel .status-actions {
-      gap: 0.45rem;
-    }
-    @media (max-width: 1180px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-      .table-wrapper {
-        margin-bottom: 2rem;
-      }
-      .details-panel {
-        order: 1;
-      }
-    }
-    @media (max-width: 720px) {
-      main {
-        padding: 1.75rem;
-      }
-      .table-wrapper {
-        border-radius: 16px;
-      }
-      table {
-        min-width: 640px;
-      }
-    }
-    .details-panel {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-    .details-empty {
-      text-align: center;
-      padding: 3rem 1rem;
-      border: 1px dashed rgba(255, 255, 255, 0.2);
-      border-radius: 16px;
-      opacity: 0.7;
-    }
-    .details-body.hidden {
-      display: none;
-    }
-    .details-body {
-      display: flex;
-      flex-direction: column;
-      gap: 1.25rem;
-    }
-    .details-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 0.75rem;
-      flex-wrap: wrap;
-    }
-    .details-header h3 {
-      margin: 0;
-      font-size: 1.45rem;
-    }
-    .details-header .badge {
-      padding: 0.25rem 0.6rem;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.1);
-      font-size: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .preview-card {
-      position: relative;
-      border-radius: 18px;
-      overflow: hidden;
-      min-height: 220px;
-      background: rgba(15, 23, 42, 0.6);
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    .preview-card img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-    .preview-card .placeholder {
-      text-align: center;
-      font-size: 0.95rem;
-      opacity: 0.6;
-      padding: 1rem;
-    }
-    .detail-meta-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 0.75rem;
-    }
-    .detail-meta-item {
-      background: rgba(15, 23, 42, 0.65);
-      border-radius: 14px;
-      padding: 0.75rem 0.85rem;
-      border: 1px solid rgba(255, 255, 255, 0.06);
-    }
-    .detail-meta-item span {
-      display: block;
-    }
-    .meta-label {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      opacity: 0.6;
-      margin-bottom: 0.25rem;
-    }
-    .meta-value {
-      font-size: 1.05rem;
-      font-weight: 600;
-    }
-    .detail-section h4 {
-      margin: 0 0 0.5rem;
-      font-size: 0.95rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      opacity: 0.75;
-    }
-    .detail-section ul {
-      margin: 0;
-      padding-left: 1.2rem;
-      line-height: 1.6;
-    }
-    .detail-section textarea {
-      width: 100%;
-      border-radius: 14px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      background: rgba(15, 23, 42, 0.8);
-      color: #f8fbff;
-      padding: 0.75rem;
-      resize: vertical;
-      min-height: 120px;
-      font-family: inherit;
-      font-size: 0.95rem;
-    }
-    .detail-section textarea:focus {
-      outline: none;
-      border-color: rgba(32, 191, 85, 0.5);
-      box-shadow: 0 0 0 2px rgba(32, 191, 85, 0.25);
-    }
-    .notes-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.35rem 0.65rem;
-      border-radius: 999px;
-      background: rgba(255, 255, 255, 0.12);
-      font-size: 0.7rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-    .notes-pill.muted {
-      opacity: 0.5;
-    }
-    .notes-cell {
-      min-width: 120px;
-    }
-    .progress-bar {
-      position: relative;
-      height: 8px;
-      border-radius: 999px;
-      overflow: hidden;
-      background: rgba(255, 255, 255, 0.08);
-      margin-top: 0.5rem;
-    }
-    .progress-bar .fill {
-      height: 100%;
-      background: linear-gradient(90deg, #20bf55, #01baef);
-      width: 0;
-      transition: width 0.4s ease;
-    }
-    .preview-card .placeholder.overlay {
-      background: rgba(15, 23, 42, 0.6);
-      padding: 0.85rem 1.1rem;
-      border-radius: 12px;
-    }
-    @media (max-width: 960px) {
-      .dashboard-grid {
-        grid-template-columns: 1fr;
-      }
-      .details-panel {
-        order: -1;
-      }
     }
   </style>
 </head>
 <body>
   <main>
-    <h2 style="margin-top:0; font-size:2.1rem; letter-spacing:0.05em; text-transform:uppercase;">Operator Panel</h2>
+    <h2>Operator Panel</h2>
     <div class="meta">
       <label for="pin">Enter Operator PIN</label>
       <input type="password" id="pin" placeholder="Enter PIN" />
@@ -596,174 +82,58 @@
       <button id="exportCsv" class="secondary" style="display:none;">Export CSV</button>
     </div>
 
-    <div id="dashboard" class="dashboard-grid" style="display:none;">
-      <section class="table-panel">
-        <div class="panel-header">
-          <h3>Check-in Queue</h3>
-          <p>Tap a row to update progress and add notes.</p>
-        </div>
-        <div class="table-wrapper">
-          <div class="table-wrapper-inner">
-            <table id="recordsTable">
-              <thead>
-                <tr>
-                  <th>Customer #</th>
-                  <th>Name</th>
-                  <th>Payment</th>
-                  <th>Emails</th>
-                  <th>Prints</th>
-                  <th>Photo ID</th>
-                  <th>Notes</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
-          </div>
-        </div>
-      </section>
-      <aside class="details-panel">
-        <h3>Session Details</h3>
-        <div id="details-empty" class="details-empty">Select a customer to see their snapshot, delivery info, and add notes.</div>
-        <div id="details-body" class="details-body hidden">
-          <div class="details-header">
-            <h3 id="detail-name">—</h3>
-            <span class="badge" id="detail-photo-id">Photo ID —</span>
-          </div>
-          <div class="preview-card" id="detail-preview">
-            <div class="placeholder">No preview available</div>
-          </div>
-          <div class="detail-meta-grid">
-            <div class="detail-meta-item">
-              <span class="meta-label">Customer #</span>
-              <span class="meta-value" id="detail-customer-number">—</span>
-            </div>
-            <div class="detail-meta-item">
-              <span class="meta-label">Payment</span>
-              <span class="meta-value" id="detail-payment">—</span>
-            </div>
-            <div class="detail-meta-item">
-              <span class="meta-label">Prints</span>
-              <span class="meta-value" id="detail-prints">—</span>
-            </div>
-            <div class="detail-meta-item">
-              <span class="meta-label">People</span>
-              <span class="meta-value" id="detail-people">—</span>
-            </div>
-            <div class="detail-meta-item">
-              <span class="meta-label">Delivery</span>
-              <span class="meta-value" id="detail-delivery">—</span>
-            </div>
-            <div class="detail-meta-item">
-              <span class="meta-label">Created</span>
-              <span class="meta-value" id="detail-created">—</span>
-            </div>
-          </div>
-          <div class="detail-section">
-            <h4>Emails</h4>
-            <ul id="detail-emails"></ul>
-          </div>
-          <div class="detail-section">
-            <h4>Status Progress</h4>
-            <div id="detail-status" class="status-actions"></div>
-            <div class="status-progress" id="detail-progress-text">—</div>
-            <div class="progress-bar"><div class="fill" id="detail-progress-fill"></div></div>
-          </div>
-          <div class="detail-section">
-            <h4>Operator Notes</h4>
-            <textarea id="detail-notes" placeholder="Add follow-up notes or reminders..."></textarea>
-          </div>
-        </div>
-      </aside>
+    <div id="dashboard" style="display:none;">
+      <table id="recordsTable">
+        <thead>
+          <tr>
+            <th>Customer #</th>
+            <th>Name</th>
+            <th>Payment</th>
+            <th>Emails</th>
+            <th>Prints</th>
+            <th>Photo ID</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
     </div>
   </main>
 
   <script>
     const PIN = "1234";
-    const STATUS_ENTRIES = [
-      { label: "Paid", key: "paid" },
-      { label: "Email Sent", key: "emailed" },
-      { label: "Printed", key: "printed" },
-      { label: "Picked Up", key: "pickedUp" },
-      { label: "Photo Taken", key: "photoTaken" }
-    ];
-    const DEFAULT_STATUS = STATUS_ENTRIES.reduce((acc, entry) => {
-      acc[entry.key] = false;
-      return acc;
-    }, {});
-
-    let recordsCache = [];
-    let selectedRecordIndex = null;
-
     const loginBtn = document.getElementById("loginBtn");
     const dashboard = document.getElementById("dashboard");
     const exportBtn = document.getElementById("exportCsv");
-    const tableBody = document.querySelector("#recordsTable tbody");
 
-    const detailsEmpty = document.getElementById("details-empty");
-    const detailsBody = document.getElementById("details-body");
-    const detailName = document.getElementById("detail-name");
-    const detailPhotoId = document.getElementById("detail-photo-id");
-    const detailCustomerNumber = document.getElementById("detail-customer-number");
-    const detailPayment = document.getElementById("detail-payment");
-    const detailPrints = document.getElementById("detail-prints");
-    const detailPeople = document.getElementById("detail-people");
-    const detailDelivery = document.getElementById("detail-delivery");
-    const detailCreated = document.getElementById("detail-created");
-    const detailEmails = document.getElementById("detail-emails");
-    const detailStatus = document.getElementById("detail-status");
-    const detailProgressText = document.getElementById("detail-progress-text");
-    const detailProgressFill = document.getElementById("detail-progress-fill");
-    const detailNotes = document.getElementById("detail-notes");
-    const detailPreview = document.getElementById("detail-preview");
-
-    loginBtn.addEventListener("click", handleLogin);
-    exportBtn.addEventListener("click", handleExport);
-    tableBody.addEventListener("click", handleTableClick);
-    detailStatus.addEventListener("click", handleDetailStatusClick);
-    detailNotes.addEventListener("input", handleNotesInput);
-
-    function handleLogin() {
-      const input = document.getElementById("pin").value.trim();
+    loginBtn.addEventListener("click", () => {
+      const input = document.getElementById("pin").value;
       if (input === PIN) {
-        dashboard.style.display = "grid";
+        dashboard.style.display = "block";
         exportBtn.style.display = "inline-flex";
         loadRecords();
       } else {
         alert("Invalid PIN");
       }
-    }
+    });
 
-    function handleExport() {
-      if (!recordsCache.length) {
-        alert("No records to export.");
-        return;
-      }
-      const headers = [
-        "Customer #",
-        "Name",
-        "Payment",
-        "Emails",
-        "Prints",
-        "Photo ID",
-        "Notes",
-        "Status"
-      ];
+    exportBtn.addEventListener("click", () => {
+      const rows = Array.from(document.querySelectorAll('#recordsTable tbody tr'));
+      const headers = ["Customer #","Name","Payment","Emails","Prints","Photo ID","Status"];
       const csv = [headers.join(',')];
-      recordsCache.forEach(record => {
-        const emails = Array.isArray(record.emails) ? record.emails.join(' | ') : '';
-        const statusSummary = STATUS_ENTRIES
-          .map(entry => `${entry.key}:${record.status[entry.key] ? 'done' : 'pending'}`)
+      rows.forEach(row => {
+        const cells = Array.from(row.querySelectorAll('td'));
+        const statusLabels = Array.from(cells[6].querySelectorAll('button'))
+          .map(btn => `${btn.dataset.action}:${btn.classList.contains('completed') ? 'done' : 'pending'}`)
           .join('|');
         const values = [
-          toCsvValue(record.customerNumber || record.photoID || ''),
-          toCsvValue(record.name || ''),
-          toCsvValue(record.payment || ''),
-          toCsvValue(emails),
-          toCsvValue(record.prints ?? ''),
-          toCsvValue(record.photoID || record.customerNumber || ''),
-          toCsvValue(record.notes || ''),
-          toCsvValue(statusSummary)
+          cells[0].textContent.trim(),
+          cells[1].textContent.trim(),
+          cells[2].textContent.trim(),
+          cells[3].textContent.trim(),
+          cells[4].textContent.trim(),
+          cells[5].textContent.trim(),
+          statusLabels
         ];
         csv.push(values.join(','));
       });
@@ -773,496 +143,62 @@
       link.download = 'records.csv';
       link.click();
       setTimeout(() => URL.revokeObjectURL(link.href), 1000);
-    }
+    });
 
     async function loadRecords() {
       try {
-        const response = await fetch('records.json');
-        if (!response.ok) {
+        const res = await fetch('records.json');
+        if (!res.ok) {
           throw new Error('Missing records file');
         }
-        const remoteRecords = await response.json();
-        const storedRecords = readStoredRecords();
-        setRecords(mergeRecords(remoteRecords, storedRecords));
+        const data = await res.json();
+        renderRecords(data);
       } catch (error) {
-        setRecords(readStoredRecords());
+        const stored = JSON.parse(localStorage.getItem('records') || '[]');
+        renderRecords(stored);
       }
     }
 
-    function handleTableClick(event) {
-      const button = event.target.closest('.status-btn');
-      if (button) {
-        event.preventDefault();
-        event.stopPropagation();
-        const row = button.closest('tr[data-index]');
-        if (!row) return;
-        const index = Number(row.dataset.index);
-        toggleStatus(index, button.dataset.action);
-        return;
-      }
-      const row = event.target.closest('tr[data-index]');
-      if (row) {
-        selectRecord(Number(row.dataset.index));
-      }
+    function renderRecords(data) {
+      const tbody = document.querySelector('#recordsTable tbody');
+      tbody.innerHTML = data.map(record => {
+        const emails = Array.isArray(record.emails) && record.emails.length ? record.emails.join(' | ') : '—';
+        return `
+          <tr>
+            <td>${record.customerNumber || record.photoID || ''}</td>
+            <td>${record.name || ''}</td>
+            <td>${record.payment || ''}</td>
+            <td>${emails}</td>
+            <td>${record.prints ?? ''}</td>
+            <td>${record.photoID || record.customerNumber || ''}</td>
+            <td class="status-actions">
+              ${renderStatusButtons(record)}
+            </td>
+          </tr>`;
+      }).join('');
+      attachStatusListeners();
     }
 
-    function handleDetailStatusClick(event) {
-      const button = event.target.closest('.status-btn');
-      if (!button || selectedRecordIndex === null) return;
-      event.preventDefault();
-      toggleStatus(selectedRecordIndex, button.dataset.action);
-    }
-
-    function handleNotesInput(event) {
-      if (selectedRecordIndex === null) return;
-      recordsCache[selectedRecordIndex].notes = event.target.value;
-      updateStoredRecords();
-      updateNotesPill(selectedRecordIndex);
-    }
-
-    function setRecords(data) {
-      recordsCache = normalizeRecords(data);
-      if (selectedRecordIndex !== null && selectedRecordIndex >= recordsCache.length) {
-        selectedRecordIndex = null;
-      }
-      renderRecords();
-    }
-
-    function renderRecords() {
-      tableBody.innerHTML = recordsCache
-        .map((record, index) => renderRow(record, index))
-        .join('');
-
-      if (!recordsCache.length) {
-        selectedRecordIndex = null;
-        showEmptyDetails();
-      } else if (selectedRecordIndex === null || selectedRecordIndex >= recordsCache.length) {
-        selectRecord(0);
-      } else {
-        applySelectionHighlight();
-        showRecordDetails(recordsCache[selectedRecordIndex]);
-      }
-      updateStoredRecords();
-    }
-
-    function renderRow(record, index) {
-      const emails = Array.isArray(record.emails) ? record.emails : [];
-      const emailDisplay = emails.length
-        ? emails.map(escapeHtml).join(' | ')
-        : '—';
-      const prints = record.prints ?? '';
-      const customerId = record.customerNumber || record.photoID || '';
-      return `
-        <tr data-index="${index}">
-          <td>${escapeHtml(customerId)}</td>
-          <td>${escapeHtml(record.name || '')}</td>
-          <td>${escapeHtml(record.payment || '')}</td>
-          <td>${emailDisplay}</td>
-          <td>${escapeHtml(String(prints))}</td>
-          <td>${escapeHtml(record.photoID || record.customerNumber || '')}</td>
-          <td class="notes-cell">${formatNotesPill(record.notes)}</td>
-          <td>
-            <div class="status-actions">
-              ${renderStatusButtons(record, 'table')}
-            </div>
-            <div class="status-progress">${formatProgress(record)}</div>
-          </td>
-        </tr>`;
-    }
-
-    function renderStatusButtons(record, context) {
-      return STATUS_ENTRIES.map(entry => {
-        const isComplete = Boolean(record.status[entry.key]);
-        const classes = ['status-btn'];
-        if (context === 'detail') {
-          classes.push('detail');
-        }
-        if (isComplete) {
-          classes.push('completed');
-        }
-        return `<button type="button" data-action="${entry.key}" class="${classes.join(' ')}">${entry.label}</button>`;
+    function renderStatusButtons(record) {
+      const statusMap = {
+        'Paid': 'paid',
+        'Email Sent': 'emailed',
+        'Printed': 'printed',
+        'Picked Up': 'pickedUp',
+        'Photo Taken': 'photoTaken'
+      };
+      return Object.entries(statusMap).map(([label, key]) => {
+        const completed = record.status && record.status[key];
+        return `<button data-action="${key}" class="${completed ? 'completed' : ''}">${label}</button>`;
       }).join('');
     }
 
-    function selectRecord(index) {
-      if (index < 0 || index >= recordsCache.length) {
-        return;
-      }
-      selectedRecordIndex = index;
-      applySelectionHighlight();
-      showRecordDetails(recordsCache[index]);
-    }
-
-    function applySelectionHighlight() {
-      tableBody.querySelectorAll('tr[data-index]').forEach(row => {
-        const rowIndex = Number(row.dataset.index);
-        row.classList.toggle('selected', rowIndex === selectedRecordIndex);
+    function attachStatusListeners() {
+      document.querySelectorAll('.status-actions button').forEach(button => {
+        button.addEventListener('click', () => {
+          button.classList.toggle('completed');
+        });
       });
-    }
-
-    function showRecordDetails(record) {
-      if (!record) {
-        showEmptyDetails();
-        return;
-      }
-      detailsEmpty.classList.add('hidden');
-      detailsBody.classList.remove('hidden');
-
-      detailName.textContent = record.name || 'Walk-in Guest';
-      detailPhotoId.textContent = `Photo ID ${record.photoID || '—'}`;
-      detailCustomerNumber.textContent = record.customerNumber || record.photoID || '—';
-      detailPayment.textContent = record.payment || '—';
-      detailPrints.textContent = record.prints ?? '—';
-      detailPeople.textContent = record.people ?? record.peopleCount ?? '—';
-      detailDelivery.textContent = record.delivery || record.deliveryMethod || '—';
-      detailCreated.textContent = formatTimestamp(record.createdAt);
-
-      const emails = Array.isArray(record.emails) ? record.emails : [];
-      detailEmails.innerHTML = emails.length
-        ? emails.map(email => `<li>${escapeHtml(email)}</li>`).join('')
-        : '<li>No emails requested</li>';
-
-      detailStatus.innerHTML = renderStatusButtons(record, 'detail');
-      updateDetailProgress(record);
-      detailNotes.value = record.notes || '';
-      renderPreview(record);
-    }
-
-    function showEmptyDetails() {
-      detailsBody.classList.add('hidden');
-      detailsEmpty.classList.remove('hidden');
-    }
-
-    function updateDetailProgress(record) {
-      const completed = countCompleted(record);
-      const total = STATUS_ENTRIES.length;
-      const percent = total ? Math.round((completed / total) * 100) : 0;
-      detailProgressText.textContent = `${completed}/${total} Complete`;
-      detailProgressFill.style.width = `${percent}%`;
-    }
-
-    function renderPreview(record) {
-      detailPreview.innerHTML = '';
-      detailPreview.style.background = 'rgba(15, 23, 42, 0.6)';
-      detailPreview.style.backgroundImage = '';
-      detailPreview.style.backgroundSize = 'cover';
-      detailPreview.style.backgroundPosition = 'center';
-
-      if (record.selfieData) {
-        detailPreview.innerHTML = `<img src="${record.selfieData}" alt="Customer snapshot" />`;
-        return;
-      }
-
-      const backgroundImage = record.backgroundImage || '';
-      if (backgroundImage.startsWith('data:')) {
-        detailPreview.innerHTML = `<img src="${backgroundImage}" alt="Selected background" />`;
-        return;
-      }
-
-      if (backgroundImage.startsWith('linear-gradient')) {
-        detailPreview.style.background = backgroundImage;
-        detailPreview.innerHTML = '<div class="placeholder overlay">Background preview</div>';
-        return;
-      }
-
-      if (backgroundImage.includes('url(')) {
-        detailPreview.style.backgroundImage = backgroundImage;
-        detailPreview.innerHTML = '';
-        return;
-      }
-
-      detailPreview.innerHTML = '<div class="placeholder">No preview available</div>';
-    }
-
-    function toggleStatus(index, key) {
-      const record = recordsCache[index];
-      if (!record || !STATUS_ENTRIES.some(entry => entry.key === key)) {
-        return;
-      }
-      record.status[key] = !record.status[key];
-      updateStoredRecords();
-      updateRowProgress(index);
-      if (selectedRecordIndex === index) {
-        showRecordDetails(record);
-      }
-    }
-
-    function updateRowProgress(index) {
-      const record = recordsCache[index];
-      const row = tableBody.querySelector(`tr[data-index="${index}"]`);
-      if (!record || !row) {
-        return;
-      }
-      const progressLabel = row.querySelector('.status-progress');
-      if (progressLabel) {
-        progressLabel.textContent = formatProgress(record);
-      }
-      STATUS_ENTRIES.forEach(entry => {
-        const button = row.querySelector(`.status-btn[data-action="${entry.key}"]`);
-        if (button) {
-          button.classList.toggle('completed', Boolean(record.status[entry.key]));
-        }
-      });
-    }
-
-    function updateNotesPill(index) {
-      const row = tableBody.querySelector(`tr[data-index="${index}"]`);
-      if (!row) return;
-      const cell = row.querySelector('.notes-cell');
-      if (cell) {
-        cell.innerHTML = formatNotesPill(recordsCache[index].notes);
-      }
-    }
-
-    function formatProgress(record) {
-      const completed = countCompleted(record);
-      const total = STATUS_ENTRIES.length;
-      return `${completed}/${total} Complete`;
-    }
-
-    function countCompleted(record) {
-      return STATUS_ENTRIES.reduce((count, entry) => count + (record.status[entry.key] ? 1 : 0), 0);
-    }
-
-    function normalizeRecords(data = []) {
-      return data.map(record => {
-        const status = { ...DEFAULT_STATUS, ...(record.status || {}) };
-        return {
-          ...record,
-          status,
-          notes: typeof record.notes === 'string' ? record.notes : '',
-          emails: Array.isArray(record.emails) ? record.emails : (record.emails ? [record.emails] : []),
-          backgroundImage: record.backgroundImage || '',
-          selfieData: record.selfieData || ''
-        };
-      });
-    }
-
-    function mergeRecords(primary = [], secondary = []) {
-      const secondaryMap = new Map();
-      secondary.forEach(record => {
-        const key = getRecordKey(record);
-        if (key) {
-          secondaryMap.set(key, record);
-        }
-      });
-
-      const merged = primary.map(record => {
-        const key = getRecordKey(record);
-        const fallback = key ? secondaryMap.get(key) : undefined;
-        if (!fallback) {
-          return record;
-        }
-        const status = { ...(record.status || {}), ...(fallback.status || {}) };
-        return {
-          ...record,
-          status,
-          notes: typeof fallback.notes === 'string' ? fallback.notes : (record.notes || ''),
-          backgroundImage: record.backgroundImage || fallback.backgroundImage || '',
-          selfieData: record.selfieData || fallback.selfieData || '',
-          emails: (record.emails && record.emails.length) ? record.emails : fallback.emails
-        };
-      });
-
-      secondary.forEach(record => {
-        const key = getRecordKey(record);
-        if (!key) return;
-        if (!merged.some(existing => getRecordKey(existing) === key)) {
-          merged.push(record);
-        }
-      });
-
-      return merged;
-    }
-
-    function getRecordKey(record) {
-      if (!record) return null;
-      if (record.photoID) return String(record.photoID);
-      if (record.customerNumber) return String(record.customerNumber);
-      if (record.createdAt) return String(record.createdAt);
-      return null;
-    }
-
-    function updateStoredRecords() {
-      try {
-        localStorage.setItem('records', JSON.stringify(recordsCache));
-      } catch (error) {
-        console.warn('Unable to persist records', error);
-      }
-    }
-
-    function readStoredRecords() {
-      try {
-        return JSON.parse(localStorage.getItem('records') || '[]');
-      } catch (error) {
-        console.warn('Unable to read stored records', error);
-        return [];
-      }
-    }
-
-    function escapeHtml(value) {
-      const text = value == null ? '' : String(value);
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function formatNotesPill(notes) {
-      if (!notes || !notes.trim()) {
-        return '<span class="notes-pill muted">Add note</span>';
-      }
-      const preview = notes.trim().length > 32 ? `${notes.trim().slice(0, 32)}…` : notes.trim();
-      return `<span class="notes-pill">${escapeHtml(preview)}</span>`;
-    }
-
-    function formatTimestamp(value) {
-      if (!value) return '—';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) {
-        return value;
-      }
-      return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
-    }
-
-    function toCsvValue(value) {
-      const text = value == null ? '' : String(value);
-      if (/[",\n]/.test(text)) {
-        return '"' + text.replace(/"/g, '""') + '"';
-      }
-      return text;
-    }
-
-    function updateNotesPill(index) {
-      const row = tableBody.querySelector(`tr[data-index="${index}"]`);
-      if (!row) return;
-      const cell = row.querySelector('.notes-cell');
-      if (cell) {
-        cell.innerHTML = formatNotesPill(recordsCache[index].notes);
-      }
-    }
-
-    function formatProgress(record) {
-      const completed = countCompleted(record);
-      const total = STATUS_ENTRIES.length;
-      return `${completed}/${total} Complete`;
-    }
-
-    function countCompleted(record) {
-      return STATUS_ENTRIES.reduce((count, entry) => count + (record.status[entry.key] ? 1 : 0), 0);
-    }
-
-    function normalizeRecords(data = []) {
-      return data.map(record => {
-        const status = { ...DEFAULT_STATUS, ...(record.status || {}) };
-        return {
-          ...record,
-          status,
-          notes: typeof record.notes === 'string' ? record.notes : '',
-          emails: Array.isArray(record.emails) ? record.emails : (record.emails ? [record.emails] : []),
-          backgroundImage: record.backgroundImage || '',
-          selfieData: record.selfieData || ''
-        };
-      });
-    }
-
-    function mergeRecords(primary = [], secondary = []) {
-      const secondaryMap = new Map();
-      secondary.forEach(record => {
-        const key = getRecordKey(record);
-        if (key) {
-          secondaryMap.set(key, record);
-        }
-      });
-
-      const merged = primary.map(record => {
-        const key = getRecordKey(record);
-        const fallback = key ? secondaryMap.get(key) : undefined;
-        if (!fallback) {
-          return record;
-        }
-        const status = { ...(record.status || {}), ...(fallback.status || {}) };
-        return {
-          ...record,
-          status,
-          notes: typeof fallback.notes === 'string' ? fallback.notes : (record.notes || ''),
-          backgroundImage: record.backgroundImage || fallback.backgroundImage || '',
-          selfieData: record.selfieData || fallback.selfieData || '',
-          emails: (record.emails && record.emails.length) ? record.emails : fallback.emails
-        };
-      });
-
-      secondary.forEach(record => {
-        const key = getRecordKey(record);
-        if (!key) return;
-        if (!merged.some(existing => getRecordKey(existing) === key)) {
-          merged.push(record);
-        }
-      });
-
-      return merged;
-    }
-
-    function getRecordKey(record) {
-      if (!record) return null;
-      if (record.photoID) return String(record.photoID);
-      if (record.customerNumber) return String(record.customerNumber);
-      if (record.createdAt) return String(record.createdAt);
-      return null;
-    }
-
-    function updateStoredRecords() {
-      try {
-        localStorage.setItem('records', JSON.stringify(recordsCache));
-      } catch (error) {
-        console.warn('Unable to persist records', error);
-      }
-    }
-
-    function readStoredRecords() {
-      try {
-        return JSON.parse(localStorage.getItem('records') || '[]');
-      } catch (error) {
-        console.warn('Unable to read stored records', error);
-        return [];
-      }
-    }
-
-    function escapeHtml(value) {
-      const text = value == null ? '' : String(value);
-      return text
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#39;');
-    }
-
-    function formatNotesPill(notes) {
-      if (!notes || !notes.trim()) {
-        return '<span class="notes-pill muted">Add note</span>';
-      }
-      const preview = notes.trim().length > 32 ? `${notes.trim().slice(0, 32)}…` : notes.trim();
-      return `<span class="notes-pill">${escapeHtml(preview)}</span>`;
-    }
-
-    function formatTimestamp(value) {
-      if (!value) return '—';
-      const date = new Date(value);
-      if (Number.isNaN(date.getTime())) {
-        return value;
-      }
-      return `${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })} • ${date.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' })}`;
-    }
-
-    function toCsvValue(value) {
-      const text = value == null ? '' : String(value);
-      if (/[",\n]/.test(text)) {
-        return '"' + text.replace(/"/g, '""') + '"';
-      }
-      return text;
     }
   </script>
 </body>

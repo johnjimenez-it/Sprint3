@@ -1,6 +1,9 @@
 {
   "eventName": "Retro Remix — Retro Arcade Night",
   "price": 15.0,
+  "printFee": 5.0,
+  "emailFee": 3.0,
+  "multiBackgroundFee": 10.0,
   "currency": "USD",
   "paymentMethods": ["Cash", "Tap to Pay", "Credit Card", "Debit Card"],
   "deliveryMethods": ["Email", "Print Pickup", "Both"],

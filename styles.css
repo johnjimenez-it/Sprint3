@@ -60,146 +60,14 @@ body {
 }
 
 .progress-indicator {
-  margin: 0 0 1.5rem;
-  max-width: none;
-  background: rgba(255, 255, 255, 0.75);
+  margin: 0 auto 1rem;
+  max-width: 640px;
+  background: rgba(29, 143, 203, 0.12);
   color: var(--primary);
-  border-radius: 18px;
-  padding: 0.75rem 1rem;
-  border: 1px solid rgba(29, 143, 203, 0.2);
-  backdrop-filter: blur(8px);
-  box-shadow: 0 12px 28px rgba(17, 36, 51, 0.08);
-}
-
-.progress-track {
-  position: relative;
-  height: 6px;
-  background: rgba(29, 143, 203, 0.2);
   border-radius: 999px;
-  overflow: hidden;
-  margin-bottom: 0.75rem;
-}
-
-.progress-fill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  height: 100%;
-  width: 0%;
-  background: linear-gradient(90deg, var(--primary), var(--primary-dark));
-  transition: width 0.3s ease;
-}
-
-.progress-steps {
-  display: flex;
-  justify-content: space-between;
-  gap: 0.5rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-.progress-steps li {
-  flex: 1;
-  min-width: 0;
-}
-
-.progress-step {
-  width: 100%;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid transparent;
-  border-radius: 14px;
-  padding: 0.4rem 0.6rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.3rem;
-  color: #335066;
+  padding: 0.5rem 1.5rem;
   font-weight: 600;
-  cursor: pointer;
-  min-height: 56px;
-  transition: transform 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.progress-step:hover:not([disabled]) {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 18px rgba(17, 36, 51, 0.12);
-}
-
-.progress-step[disabled] {
-  cursor: not-allowed;
-  opacity: 0.55;
-  box-shadow: none;
-}
-
-.progress-step__index {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 28px;
-  height: 28px;
-  border-radius: 50%;
-  background: rgba(29, 143, 203, 0.18);
-  color: var(--primary);
-  font-size: 0.95rem;
-}
-
-.progress-step__label {
-  font-size: 0.8rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
   text-align: center;
-  font-weight: 600;
-}
-
-.progress-step.completed {
-  border-color: rgba(32, 191, 85, 0.5);
-}
-
-.progress-step.completed .progress-step__index {
-  background: var(--accent);
-  color: white;
-}
-
-.progress-step.current {
-  border-color: var(--primary);
-  box-shadow: 0 8px 20px rgba(29, 143, 203, 0.18);
-}
-
-.progress-step.current .progress-step__index {
-  background: var(--primary);
-  color: white;
-}
-
-.progress-status {
-  margin-top: 0.75rem;
-  text-align: center;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: #335066;
-}
-
-@media (max-width: 900px) {
-  .progress-indicator {
-    padding: 0.6rem 0.75rem;
-  }
-
-  .progress-steps {
-    gap: 0.4rem;
-  }
-
-  .progress-step {
-    padding: 0.35rem 0.5rem;
-    min-height: 52px;
-  }
-
-  .progress-step__label {
-    font-size: 0.75rem;
-  }
-
-  .progress-status {
-    font-size: 0.85rem;
-  }
 }
 
 .primary,
@@ -262,6 +130,33 @@ body {
   border: 2px solid #deecf7;
 }
 
+.addon-card {
+  margin-top: 1rem;
+  padding: 1.25rem;
+  border-radius: 18px;
+  background: #f4f1ff;
+  border: 2px solid #dcd7f5;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.addon-card h3 {
+  margin: 0;
+  font-size: 1.35rem;
+  color: #452c63;
+}
+
+.addon-card .secondary.active {
+  background: #452c63;
+  color: #ffffff;
+  border-color: #452c63;
+}
+
+.addon-card .secondary.active:focus-visible {
+  outline-color: #ffafcc;
+}
+
 .nav-buttons {
   margin-top: 2rem;
   display: flex;
@@ -275,6 +170,41 @@ body {
   font-weight: 700;
   margin: 0;
   color: var(--primary);
+}
+
+.price-breakdown {
+  margin-top: 1rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #d0d9e5;
+}
+
+.price-breakdown h4 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  color: #1b3b58;
+}
+
+.price-breakdown ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.price-breakdown li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  font-size: 1rem;
+}
+
+.price-breakdown li.total {
+  font-weight: 700;
+  border-top: 1px solid #d0d9e5;
+  padding-top: 0.5rem;
+  margin-top: 0.5rem;
 }
 
 .background-grid {
