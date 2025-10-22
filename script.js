@@ -101,6 +101,8 @@ function showScreen(targetId) {
     }
   });
 
+  document.body.classList.toggle('is-welcome-screen', targetId === 'screen-welcome');
+
   const progressIndex = progressScreens.indexOf(targetId);
   if (progressIndex !== -1) {
     furthestProgressIndex = Math.max(furthestProgressIndex, progressIndex);
@@ -262,11 +264,22 @@ function init() {
       resetIdleTimer();
     });
   }
+  document.body.classList.add('is-welcome-screen');
   updateProgress('screen-welcome');
 }
 
 function setupNavigation() {
-  document.getElementById('start-btn').addEventListener('click', () => showScreen('screen-background'));
+  const welcomeScreen = document.getElementById('screen-welcome');
+  if (welcomeScreen) {
+    const startExperience = () => showScreen('screen-background');
+    welcomeScreen.addEventListener('click', startExperience);
+    welcomeScreen.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        startExperience();
+      }
+    });
+  }
   document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', goToNextScreen));
   document.querySelectorAll('[data-prev]').forEach(btn => btn.addEventListener('click', goToPreviousScreen));
 }
@@ -276,11 +289,22 @@ function populateEventInfo() {
   if (eventName) {
     eventName.textContent = `${appConfig.eventName}`;
   }
-  const headerName = document.getElementById('eventName');
-  headerName.textContent = appConfig.eventName;
-  document.getElementById('eventTagline').textContent = 'Tap to begin your photo experience';
+  const welcomeInstruction = document.getElementById('welcome-instruction');
+  if (welcomeInstruction) {
+    const promptText = appConfig.startPrompt || 'Tap anywhere to begin';
+    welcomeInstruction.textContent = promptText;
+  }
+  const eventTagline = document.getElementById('eventTagline');
+  if (eventTagline) {
+    const taglineText = appConfig.tagline || (appConfig.backgroundTheme ? `Theme: ${appConfig.backgroundTheme}` : '');
+    eventTagline.textContent = taglineText;
+    eventTagline.hidden = taglineText.trim().length === 0;
+  }
   const priceInfo = document.getElementById('price-info');
-  const headerPrice = document.getElementById('eventPrice');
+  if (!priceInfo) {
+    updatePricingDisplay();
+    return;
+  }
   const baseFormatted = formatCurrency(Number(appConfig.price || 0), appConfig.currency);
   const printFeeText = formatCurrency(getFeeValue('printFee', PRICING_DEFAULTS.printFee), appConfig.currency);
   const emailFeeText = formatCurrency(getFeeValue('emailFee', PRICING_DEFAULTS.emailFee), appConfig.currency);
@@ -288,10 +312,8 @@ function populateEventInfo() {
 
   if (!appConfig.price) {
     priceInfo.textContent = `Today only: Free photo session! Add-ons: prints ${printFeeText} each, emails ${emailFeeText} each, multi-background add-on ${multiFeeText}.`;
-    headerPrice.textContent = 'Free Event';
   } else {
     priceInfo.textContent = `Base package: ${baseFormatted}. Prints add ${printFeeText} each, emails add ${emailFeeText} each, multi-background add-on ${multiFeeText}.`;
-    headerPrice.textContent = `Starting at ${baseFormatted}`;
   }
 
   updatePricingDisplay();
@@ -998,21 +1020,6 @@ function updatePricingDisplay() {
 
   const currentScreenId = screenOrder[currentScreenIndex] || 'screen-welcome';
   const onWelcomeScreen = currentScreenId === 'screen-welcome';
-  const totalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-
-  const headerPrice = document.getElementById('eventPrice');
-  if (headerPrice) {
-    if (onWelcomeScreen) {
-      if (details.basePrice) {
-        headerPrice.textContent = `Starting at ${formatCurrency(details.basePrice, details.currency)}`;
-      } else {
-        headerPrice.textContent = 'Free Event';
-      }
-    } else {
-      headerPrice.textContent = `Total: ${totalText}`;
-    }
-  }
-
   const priceInfo = document.getElementById('price-info');
   if (priceInfo) {
     const priceMessage = appConfig.price
