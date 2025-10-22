@@ -60,14 +60,102 @@ body {
 }
 
 .progress-indicator {
-  margin: 0 auto 1rem;
-  max-width: 640px;
-  background: rgba(29, 143, 203, 0.12);
-  color: var(--primary);
-  border-radius: 999px;
-  padding: 0.5rem 1.5rem;
-  font-weight: 600;
+  margin: 0 auto 1.5rem;
+  max-width: 760px;
+  background: rgba(17, 36, 51, 0.05);
+  border-radius: 18px;
+  padding: 0.65rem 0.85rem;
+  display: flex;
+  justify-content: center;
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(29, 143, 203, 0.08);
+}
+
+.progress-steps {
+  list-style: none;
+  display: flex;
+  gap: 0.75rem;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+}
+
+.progress-step {
+  background: transparent;
+  border: none;
+  padding: 0.35rem 0.75rem;
+  border-radius: 14px;
+  cursor: pointer;
   text-align: center;
+  color: #335066;
+  font-weight: 600;
+  min-width: 94px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.15rem;
+  font-size: 0.95rem;
+  transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease;
+}
+
+.progress-step:disabled {
+  cursor: default;
+  opacity: 0.55;
+}
+
+.progress-step .step-index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.85rem;
+  height: 1.85rem;
+  border-radius: 999px;
+  border: 2px solid rgba(29, 143, 203, 0.35);
+  background: white;
+  color: rgba(29, 143, 203, 0.9);
+  font-size: 1rem;
+}
+
+.progress-step .step-label {
+  font-size: 0.8rem;
+  letter-spacing: 0.01em;
+}
+
+.progress-step.is-active {
+  background: rgba(29, 143, 203, 0.18);
+  color: var(--primary-dark);
+}
+
+.progress-step.is-active .step-index {
+  border-color: var(--primary-dark);
+  background: var(--primary);
+  color: white;
+}
+
+.progress-step.is-complete {
+  color: #1c6c3f;
+}
+
+.progress-step.is-complete .step-index {
+  border-color: rgba(32, 191, 85, 0.6);
+  background: rgba(32, 191, 85, 0.18);
+  color: #19733a;
+}
+
+.progress-step:not(:disabled):active {
+  transform: scale(0.97);
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .primary,

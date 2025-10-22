@@ -16,6 +16,14 @@ const progressScreens = [
   'screen-review'
 ];
 
+const progressLabels = {
+  'screen-background': 'Background',
+  'screen-party': 'Party',
+  'screen-delivery': 'Delivery',
+  'screen-payment': 'Payment',
+  'screen-review': 'Review'
+};
+
 const state = {
   background: null,
   backgroundSource: null,
@@ -43,6 +51,7 @@ let keyboardValue = '';
 let selfieStream = null;
 let appConfig = null;
 let pendingReceipt = null;
+let furthestProgressIndex = -1;
 
 const backgroundGradients = {
   'fsu-garnet': 'linear-gradient(135deg, #782F40, #9b4a54 55%, #CEB888)',
@@ -87,6 +96,13 @@ function showScreen(targetId) {
       currentScreenIndex = index;
     }
   });
+
+  const progressIndex = progressScreens.indexOf(targetId);
+  if (progressIndex !== -1) {
+    furthestProgressIndex = Math.max(furthestProgressIndex, progressIndex);
+  } else if (targetId === 'screen-receipt') {
+    furthestProgressIndex = progressScreens.length - 1;
+  }
 
   updateProgress(targetId);
   resetIdleTimer();
@@ -169,8 +185,52 @@ async function loadConfig() {
   }
 }
 
+function renderProgressIndicator() {
+  const indicator = document.getElementById('progress-indicator');
+  if (!indicator) {
+    return;
+  }
+
+  const status = document.createElement('p');
+  status.className = 'progress-status sr-only';
+  status.setAttribute('aria-live', 'polite');
+  status.textContent = `Step 1 of ${progressScreens.length}`;
+
+  const list = document.createElement('ol');
+  list.className = 'progress-steps';
+
+  progressScreens.forEach((screenId, index) => {
+    const item = document.createElement('li');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'progress-step';
+    button.dataset.step = screenId;
+    button.dataset.index = index;
+    const label = progressLabels[screenId] || `Step ${index + 1}`;
+    button.setAttribute('aria-label', `Step ${index + 1} of ${progressScreens.length}: ${label}`);
+    button.title = `Go to ${label}`;
+    button.innerHTML = `
+      <span class="step-index">${index + 1}</span>
+      <span class="step-label">${label}</span>
+    `;
+    button.addEventListener('click', () => {
+      if (button.disabled) {
+        return;
+      }
+      showScreen(screenId);
+    });
+    item.appendChild(button);
+    list.appendChild(item);
+  });
+
+  indicator.innerHTML = '';
+  indicator.appendChild(status);
+  indicator.appendChild(list);
+}
+
 function init() {
   if (!appConfig) return;
+  renderProgressIndicator();
   setupNavigation();
   populateEventInfo();
   populateBackgrounds();
@@ -714,6 +774,7 @@ function resetKiosk() {
     multipleBackgrounds: false
   });
 
+  furthestProgressIndex = -1;
   document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
   updateBackgroundPreview('');
   document.querySelectorAll('.touch-selector').forEach(selector => selector.querySelectorAll('.touch-option').forEach(btn => btn.classList.remove('selected')));
@@ -947,15 +1008,35 @@ function generatePhotoID() {
 
 function updateProgress(targetId) {
   const indicator = document.getElementById('progress-indicator');
-  const index = progressScreens.indexOf(targetId);
-  const totalSteps = progressScreens.length;
-  if (index !== -1) {
-    indicator.textContent = `Step ${index + 1} of ${totalSteps}`;
-  } else if (targetId === 'screen-welcome') {
-    indicator.textContent = `Step 1 of ${totalSteps}`;
-  } else if (targetId === 'screen-receipt') {
-    indicator.textContent = 'Receipt Ready';
+  if (!indicator) {
+    return;
   }
+
+  const steps = indicator.querySelectorAll('.progress-step');
+  const status = indicator.querySelector('.progress-status');
+  const totalSteps = progressScreens.length;
+  const activeIndex = progressScreens.indexOf(targetId);
+  const isReceipt = targetId === 'screen-receipt';
+
+  if (status) {
+    if (activeIndex !== -1) {
+      status.textContent = `Step ${activeIndex + 1} of ${totalSteps}`;
+    } else if (isReceipt) {
+      status.textContent = 'Receipt ready';
+    } else {
+      status.textContent = `Step 1 of ${totalSteps}`;
+    }
+  }
+
+  steps.forEach(step => {
+    const stepIndex = Number(step.dataset.index);
+    const isActive = stepIndex === activeIndex && !isReceipt;
+    const isComplete = stepIndex < furthestProgressIndex || (isReceipt && stepIndex === furthestProgressIndex);
+    step.classList.toggle('is-active', isActive);
+    step.classList.toggle('is-complete', isComplete && !isActive);
+    step.disabled = stepIndex > furthestProgressIndex;
+    step.setAttribute('aria-current', isActive ? 'step' : 'false');
+  });
 }
 
 function getBackgroundImage(background) {
