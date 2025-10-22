@@ -21,6 +21,11 @@ body {
   background: linear-gradient(145deg, #dff1ff, #ffffff);
 }
 
+body.is-welcome-screen .app-header,
+body.is-welcome-screen #progress-indicator {
+  display: none;
+}
+
 #app {
   width: min(100%, 1080px);
   padding: 2rem;
@@ -40,6 +45,26 @@ body {
   font-size: 1.25rem;
   margin-top: 0.5rem;
   color: #335066;
+}
+
+#event-name {
+  font-size: clamp(1.75rem, 4vw, 2.4rem);
+  font-weight: 700;
+  margin: 0.25rem 0;
+  color: #112433;
+}
+
+#eventTagline {
+  margin: 0.25rem 0 0;
+  font-size: 1.1rem;
+  color: #3d5670;
+}
+
+#price-info {
+  margin-top: 1rem;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: #22405c;
 }
 
 .screen {
@@ -288,7 +313,7 @@ body {
   color: var(--primary);
 }
 
-.price.running-total {
+.running-total {
   font-size: 1rem;
   color: #1b3b58;
   margin-top: 0.75rem;
