@@ -16,6 +16,14 @@ const progressScreens = [
   'screen-review'
 ];
 
+const progressLabels = {
+  'screen-background': 'Background',
+  'screen-party': 'Party',
+  'screen-delivery': 'Delivery',
+  'screen-payment': 'Payment',
+  'screen-review': 'Review'
+};
+
 const state = {
   background: null,
   backgroundSource: null,
@@ -164,6 +172,7 @@ async function loadConfig() {
 
 function init() {
   if (!appConfig) return;
+  buildProgressIndicator();
   setupNavigation();
   populateEventInfo();
   populateBackgrounds();
@@ -185,6 +194,49 @@ function init() {
     });
   }
   updateProgress('screen-welcome');
+}
+
+function buildProgressIndicator() {
+  const stepsContainer = document.getElementById('progress-steps');
+  if (!stepsContainer) {
+    return;
+  }
+
+  stepsContainer.innerHTML = '';
+
+  progressScreens.forEach((screenId, index) => {
+    const listItem = document.createElement('li');
+    const stepButton = document.createElement('button');
+    stepButton.type = 'button';
+    stepButton.className = 'progress-step';
+    stepButton.dataset.target = screenId;
+    stepButton.setAttribute('aria-controls', screenId);
+    const label = progressLabels[screenId] || `Step ${index + 1}`;
+    stepButton.setAttribute('aria-label', `Go to ${label}`);
+    stepButton.innerHTML = `
+      <span class="progress-step__index">${index + 1}</span>
+      <span class="progress-step__label">${label}</span>
+    `;
+    stepButton.addEventListener('click', () => {
+      const currentScreenId = screenOrder[currentScreenIndex];
+      let currentProgressIndex = progressScreens.indexOf(currentScreenId);
+      if (currentScreenId === 'screen-receipt') {
+        currentProgressIndex = progressScreens.length - 1;
+      }
+      const targetProgressIndex = progressScreens.indexOf(screenId);
+      if (targetProgressIndex === -1) {
+        return;
+      }
+      if (targetProgressIndex <= currentProgressIndex) {
+        if (currentScreenId === 'screen-party' && screenId !== 'screen-party') {
+          stopSelfie();
+        }
+        showScreen(screenId);
+      }
+    });
+    listItem.appendChild(stepButton);
+    stepsContainer.appendChild(listItem);
+  });
 }
 
 function setupNavigation() {
@@ -755,15 +807,54 @@ function generatePhotoID() {
 
 function updateProgress(targetId) {
   const indicator = document.getElementById('progress-indicator');
-  const index = progressScreens.indexOf(targetId);
-  const totalSteps = progressScreens.length;
-  if (index !== -1) {
-    indicator.textContent = `Step ${index + 1} of ${totalSteps}`;
-  } else if (targetId === 'screen-welcome') {
-    indicator.textContent = `Step 1 of ${totalSteps}`;
-  } else if (targetId === 'screen-receipt') {
-    indicator.textContent = 'Receipt Ready';
+  if (!indicator) {
+    return;
   }
+
+  const totalSteps = progressScreens.length;
+  let activeIndex = progressScreens.indexOf(targetId);
+  let statusText = '';
+
+  if (targetId === 'screen-receipt') {
+    activeIndex = totalSteps - 1;
+    statusText = 'Receipt Ready';
+  } else if (activeIndex !== -1) {
+    const label = progressLabels[targetId] || `Step ${activeIndex + 1}`;
+    statusText = `${label} (${activeIndex + 1}/${totalSteps})`;
+  } else {
+    activeIndex = -1;
+    statusText = `Step 1 of ${totalSteps}`;
+  }
+
+  const statusElement = document.getElementById('progress-status');
+  if (statusElement) {
+    statusElement.textContent = statusText;
+  }
+
+  const fillElement = document.getElementById('progress-fill');
+  if (fillElement) {
+    const safeIndex = Math.max(0, activeIndex);
+    const ratio = totalSteps > 1 ? safeIndex / (totalSteps - 1) : activeIndex >= 0 ? 1 : 0;
+    fillElement.style.width = `${Math.min(1, Math.max(0, ratio)) * 100}%`;
+  }
+
+  const stepButtons = indicator.querySelectorAll('.progress-step');
+  stepButtons.forEach((button, index) => {
+    const isCompleted = activeIndex > -1 && index < activeIndex;
+    const isCurrent = index === activeIndex;
+    button.classList.toggle('completed', isCompleted);
+    button.classList.toggle('current', isCurrent);
+    if (isCurrent) {
+      button.setAttribute('aria-current', 'step');
+    } else {
+      button.removeAttribute('aria-current');
+    }
+    if (index <= activeIndex) {
+      button.removeAttribute('disabled');
+    } else {
+      button.setAttribute('disabled', 'true');
+    }
+  });
 }
 
 function getBackgroundImage(background) {

@@ -14,8 +14,12 @@
       <p class="price" id="eventPrice"></p>
     </header>
 
-    <div id="progress-indicator" class="progress-indicator" aria-live="polite" role="status">
-      Step 1 of 5
+    <div id="progress-indicator" class="progress-indicator" aria-live="polite">
+      <div class="progress-track" aria-hidden="true">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+      <ol class="progress-steps" id="progress-steps"></ol>
+      <div class="progress-status" id="progress-status" role="status">Step 1 of 5</div>
     </div>
 
     <section id="screen-welcome" class="screen active">
