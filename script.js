@@ -819,7 +819,8 @@ function updateProgress(targetId) {
     activeIndex = totalSteps - 1;
     statusText = 'Receipt Ready';
   } else if (activeIndex !== -1) {
-    statusText = `Step ${activeIndex + 1} of ${totalSteps}`;
+    const label = progressLabels[targetId] || `Step ${activeIndex + 1}`;
+    statusText = `${label} (${activeIndex + 1}/${totalSteps})`;
   } else {
     activeIndex = -1;
     statusText = `Step 1 of ${totalSteps}`;
