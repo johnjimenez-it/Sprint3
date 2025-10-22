@@ -10,31 +10,35 @@
 1. **Welcome / Event Branding**
    - Displays event name from config, looping background video, and “Start Photo Session” button.
    - Secondary buttons: “Operator Tools” (PIN locked), “Accessibility Options” (toggle high contrast / audio prompts).
-2. **Party Details**
-   - Step indicator shows “1 of 6”.
+2. **Party Name Entry**
+   - Step indicator shows “1 of 7”.
    - Guests enter party name via large on-screen keyboard (predictive chips of common prefixes).
+   - Inline validation prevents empty submissions; “Done” advances automatically.
+3. **Guest Count**
+   - Step indicator updates to “2 of 7”.
    - Quick selector for number of people (1–10 chips, plus “More” to open keypad to the configured maximum).
-3. **Background Selection**
+   - Accessibility cue announces the selected count aloud when audio prompts enabled.
+4. **Background Selection**
    - Carousel of backgrounds sourced from config file with thumbnail preview, category chips (e.g., “Winter Magic”).
    - “Custom Background?” card explains USB upload / QR instructions; selecting opens instructions modal and allows operator scan.
    - Live preview window shows user silhouette overlay with chosen background.
-4. **Delivery & Prints**
+5. **Delivery & Prints**
    - Toggle between “Digital” and “Prints”.
    - For digital: slider to choose emails (1 to max), each email field displayed sequentially with domain suggestions and microphone icon for voice dictation.
    - For prints: stepper control with max defined in config, cost updates in real time.
    - Summary chip shows running subtotal (price × quantity) pulled from pricing table.
-5. **Payment Method**
+6. **Payment Method**
    - Grid of payment cards (cash, tap to pay, debit, credit) filtered by config; selecting one reveals contextual instructions (e.g., “Hold near reader when prompted”).
    - If price is $0, auto-selects “No Payment Required” but still includes stamp placeholder on receipt.
-6. **Review & Confirm**
+7. **Review & Confirm**
    - Card list summarizing Party, Background, Delivery, Prints, Payment, Total.
    - “Retake Details” button for each section, “Take Identification Photo” optional but encouraged (uses embedded webcam with capture + retake).
    - “Confirm & Continue” triggers capture workflow with on-screen countdown.
-7. **Capture & Approval**
+8. **Capture & Approval**
    - Large viewfinder, progress ring, and instructions to look at main camera.
    - After capture: preview with “Retake” / “Looks Great”.
    - Confirmation screen shows processing animation, digital delivery status, and print pickup instructions.
-8. **Receipt & Finish**
+9. **Receipt & Finish**
    - Split-screen receipt view: customer copy stylized, operator copy plain text.
    - “Print Receipt” button, plus QR code and “Email Receipt” toggle (optional if payment requires record).
    - Step-by-step instructions for pickup, contact, and confirmation of digital delivery timeline.
@@ -58,33 +62,38 @@ Config is validated on boot; kiosk displays maintenance screen if invalid.
 - Idle mode cycles through backgrounds with event branding overlay.
 - Accessibility toggle persists session-wide.
 
-### 4.2 Party Details
+### 4.2 Party Name Entry
 - On-screen keyboard: QWERTY layout with chunky keys, backspace, clear, and “Done”.
-- Number-of-people chips with emoji icons for quick comprehension.
-- Inline validation prevents empty party names.
+- Inline validation prevents empty party names; helper text appears beneath field.
+- Predictive chips surface common prefixes (e.g., “The”, “Team”).
 
-### 4.3 Background Selection
+### 4.3 Guest Count
+- Number-of-people chips with emoji icons for quick comprehension.
+- Chips support swipeable carousel for large parties; “More” opens keypad entry.
+- Audio prompt reads back the chosen count when accessibility mode is active.
+
+### 4.4 Background Selection
 - Grid with 3 columns, big previews, selected state adds glow border.
 - Preview area updates instantly, with optional ambient animation.
 - “Custom Background” instructions include: plug in USB with PNG/JPG, or scan QR to upload; operator confirmation required before continuing.
 
-### 4.4 Delivery & Prints
+### 4.5 Delivery & Prints
 - Delivery toggle defaults to both digital + print if price allows.
 - Email entry uses stacked cards labelled Email #1, Email #2, etc.
 - A speech bubble explains digital delivery timeframe (configurable text).
 - Print count uses +/- buttons with large numbers and feedback.
 
-### 4.5 Payment
+### 4.6 Payment
 - Payment cards show icon + label. Disabled methods appear greyed with tooltip “Unavailable for this event”.
 - If cash is selected, instructions display: “Present payment to attendant now.” Tap to pay shows: “Hold your card or phone near the reader.”
 - Credit/debit selection integrates with payment terminal (out of scope but placeholder instructions).
 
-### 4.6 Review
+### 4.7 Review
 - Summary arranged as checklist; each row has “Edit” button returning to relevant step.
 - Consent checkbox acknowledging Terms (if required) with link to PDF.
 - Capture photo button initiates countdown overlay (3…2…1).
 
-### 4.7 Receipt Screen
+### 4.8 Receipt Screen
 - **Customer Copy (Left):**
   - Party name, Event name, Date & Time (auto).
   - Payment method, totals, number of prints/emails.
