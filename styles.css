@@ -260,6 +260,12 @@ body {
   color: var(--primary);
 }
 
+.price.running-total {
+  font-size: 1.4rem;
+  color: #1b3b58;
+  margin-top: 0.25rem;
+}
+
 .price-breakdown {
   margin-top: 1rem;
   padding-top: 0.5rem;

@@ -884,6 +884,27 @@ function updatePricingDisplay() {
     priceInfo.textContent = priceMessage;
   }
 
+  const runningTotal = document.getElementById('running-total');
+  if (runningTotal) {
+    const totalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
+    const breakdownParts = [];
+    if (details.basePrice > 0) {
+      breakdownParts.push(`Base package ${formatCurrency(details.basePrice, details.currency)}`);
+    }
+    if (details.prints > 0) {
+      breakdownParts.push(`${details.prints} print${details.prints === 1 ? '' : 's'} ${formatCurrency(details.printCost, details.currency)}`);
+    }
+    if (details.emails > 0) {
+      breakdownParts.push(`${details.emails} email${details.emails === 1 ? '' : 's'} ${formatCurrency(details.emailCost, details.currency)}`);
+    }
+    if (state.multipleBackgrounds) {
+      breakdownParts.push(`Multi-background ${formatCurrency(details.multiBackgroundCost, details.currency)}`);
+    }
+    runningTotal.textContent = breakdownParts.length
+      ? `Current total: ${totalText} (${breakdownParts.join(' + ')})`
+      : `Current total: ${totalText}`;
+  }
+
   const paymentNote = document.getElementById('payment-note');
   if (paymentNote) {
     const extras = [];
