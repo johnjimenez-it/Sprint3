@@ -976,7 +976,8 @@ function finalizeTransaction() {
     charges: pendingReceipt.charges,
     multipleBackgrounds: pendingReceipt.multipleBackgrounds,
     createdAt: pendingReceipt.createdAt,
-    people: pendingReceipt.peopleCount
+    people: pendingReceipt.peopleCount,
+    selfieData: state.selfieData || null
   };
   logTransaction(receiptRecord);
   sendEmails(pendingReceipt.emails);
