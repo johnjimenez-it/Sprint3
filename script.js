@@ -576,7 +576,9 @@ function capturePendingReceipt() {
     total: priceText,
     hotline: appConfig.hotline,
     supportEmail: appConfig.supportEmail,
-    peopleCount: state.peopleCount
+    peopleCount: state.peopleCount,
+    selfieData: state.selfieData,
+    notes: ''
   };
 }
 
@@ -712,13 +714,16 @@ function finalizeTransaction() {
       emailed: false,
       printed: false,
       pickedUp: false,
-      photoTaken: Boolean(state.selfieData)
+      photoTaken: Boolean(pendingReceipt.selfieData)
     },
     delivery: pendingReceipt.deliveryMethod,
     emails: pendingReceipt.emails,
     total: pendingReceipt.total,
     createdAt: pendingReceipt.createdAt,
-    people: pendingReceipt.peopleCount
+    people: pendingReceipt.peopleCount,
+    backgroundImage: pendingReceipt.backgroundImage,
+    selfieData: pendingReceipt.selfieData,
+    notes: pendingReceipt.notes || ''
   };
   logTransaction(receiptRecord);
   sendEmails(pendingReceipt.emails);
