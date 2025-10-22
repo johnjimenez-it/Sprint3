@@ -30,6 +30,7 @@ const progressLabels = {
 const state = {
   background: null,
   backgroundSource: null,
+  backgroundSelections: [],
   customBackgroundData: null,
   partyName: '',
   peopleCount: null,
@@ -133,7 +134,12 @@ function goToPreviousScreen() {
 function validateScreen(screenId) {
   switch (screenId) {
     case 'screen-background':
-      if (!state.background) {
+      if (state.multipleBackgrounds) {
+        if (state.backgroundSelections.length < 2) {
+          alert('Please select two backgrounds to continue.');
+          return false;
+        }
+      } else if (!state.background) {
         alert('Please select a background to continue.');
         return false;
       }
@@ -299,30 +305,127 @@ function populateBackgrounds() {
     option.style.backgroundImage = getBackgroundImage(background);
     option.querySelector('.label').textContent = background.name;
     option.title = `Tap to choose ${background.name}`;
-    option.addEventListener('click', () => selectBackground(background, option, index));
+    const optionId = background.id || `background-${index}`;
+    option.dataset.backgroundId = optionId;
+    option.addEventListener('click', () => selectBackground(background, optionId));
     grid.appendChild(option);
+  });
+
+  updateBackgroundOptionSelectionClasses();
+  updateBackgroundPreview();
+}
+
+function selectBackground(background, optionId) {
+  const backgroundImage = getBackgroundImage(background);
+  const selectionId = optionId || background.id || background.name || 'custom';
+  const selection = { ...background, id: selectionId, image: backgroundImage };
+
+  state.backgroundSource = 'preset';
+  state.customBackgroundData = null;
+
+  if (state.multipleBackgrounds) {
+    const existingIndex = state.backgroundSelections.findIndex(item => item.id === selection.id);
+    if (existingIndex !== -1) {
+      state.backgroundSelections.splice(existingIndex, 1);
+    } else {
+      if (state.backgroundSelections.length >= 2) {
+        state.backgroundSelections.shift();
+      }
+      state.backgroundSelections.push(selection);
+    }
+  } else {
+    state.backgroundSelections = [selection];
+  }
+
+  state.background = state.backgroundSelections[0] || null;
+
+  updateBackgroundOptionSelectionClasses();
+  updateBackgroundPreview();
+}
+
+function updateBackgroundOptionSelectionClasses() {
+  const selectedIds = new Set(state.backgroundSelections.map(item => item.id));
+  document.querySelectorAll('.background-option').forEach(btn => {
+    const id = btn.dataset.backgroundId;
+    btn.classList.toggle('selected', selectedIds.has(id));
   });
 }
 
-function selectBackground(background, option, index) {
-  document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
-  option.classList.add('selected');
-  const backgroundImage = getBackgroundImage(background);
-  state.background = { ...background, image: backgroundImage };
-  state.backgroundSource = 'preset';
-  state.customBackgroundData = null;
-  updateBackgroundPreview(backgroundImage);
+function updateBackgroundPreview() {
+  const preview = document.getElementById('background-preview');
+  if (!preview) {
+    return;
+  }
+
+  const primarySlot = preview.querySelector('[data-slot="0"]');
+  const secondarySlot = preview.querySelector('[data-slot="1"]');
+  const firstSelection = state.backgroundSelections[0] || null;
+  const secondSelection = state.backgroundSelections[1] || null;
+
+  preview.classList.toggle('multi', state.multipleBackgrounds);
+
+  if (primarySlot) {
+    if (firstSelection) {
+      primarySlot.style.backgroundImage = firstSelection.image;
+      primarySlot.textContent = '';
+    } else {
+      primarySlot.style.backgroundImage = '';
+      primarySlot.textContent = 'Choose a background';
+    }
+  }
+
+  if (secondarySlot) {
+    if (state.multipleBackgrounds) {
+      secondarySlot.classList.remove('hidden');
+      if (secondSelection) {
+        secondarySlot.style.backgroundImage = secondSelection.image;
+        secondarySlot.textContent = '';
+      } else {
+        secondarySlot.style.backgroundImage = '';
+        secondarySlot.textContent = 'Select a second background';
+      }
+    } else {
+      secondarySlot.classList.add('hidden');
+      secondarySlot.style.backgroundImage = '';
+      secondarySlot.textContent = 'Turn on Multi-Background to add another scene';
+    }
+  }
 }
 
-function updateBackgroundPreview(imageUrl) {
-  const preview = document.getElementById('background-preview');
-  if (imageUrl) {
-    preview.style.backgroundImage = imageUrl;
-    preview.textContent = '';
-  } else {
-    preview.style.backgroundImage = '';
-    preview.textContent = 'Choose a background';
+function getSelectedBackgrounds() {
+  if (state.backgroundSelections && state.backgroundSelections.length) {
+    return state.backgroundSelections;
   }
+  if (state.background) {
+    return [state.background];
+  }
+  return [];
+}
+
+function getBackgroundSummaryText() {
+  const selections = getSelectedBackgrounds();
+  if (selections.length) {
+    return selections.map(item => item.name).join(' + ');
+  }
+  if (state.customBackgroundData) {
+    return 'Custom Background';
+  }
+  return 'Not selected';
+}
+
+function getBackgroundIdSummary() {
+  const selections = getSelectedBackgrounds();
+  if (selections.length) {
+    return selections.map(item => item.id || 'custom').join(', ');
+  }
+  if (state.customBackgroundData) {
+    return 'custom';
+  }
+  return 'none';
+}
+
+function getBackgroundLabel() {
+  return getSelectedBackgrounds().length > 1 ? 'Backgrounds' : 'Background';
 }
 
 function populateTouchSelectors() {
@@ -407,6 +510,14 @@ function setupBackgroundAddons() {
   }
   toggle.addEventListener('click', () => {
     state.multipleBackgrounds = !state.multipleBackgrounds;
+    if (state.multipleBackgrounds) {
+      if (!state.backgroundSelections.length && state.background) {
+        state.backgroundSelections = [state.background];
+      }
+    } else {
+      state.backgroundSelections = state.backgroundSelections.slice(0, 1);
+      state.background = state.backgroundSelections[0] || null;
+    }
     updatePricingDisplay();
   });
   reflectMultiBackgroundState();
@@ -428,9 +539,11 @@ function reflectMultiBackgroundState() {
     : `Add Multi-Background Package (+${multiFee})`;
   if (note) {
     note.textContent = isActive
-      ? 'You’ll capture multiple scenes during your session.'
+      ? 'Select two backgrounds to capture multiple scenes during your session.'
       : 'Add a second background setup for an additional fee.';
   }
+  updateBackgroundOptionSelectionClasses();
+  updateBackgroundPreview();
 }
 
 function setupCustomBackground() {
@@ -475,7 +588,9 @@ function setupCustomBackground() {
       image: `url(${state.customBackgroundData})`
     };
     state.backgroundSource = 'custom';
-    updateBackgroundPreview(`url(${state.customBackgroundData})`);
+    state.backgroundSelections = [state.background];
+    state.multipleBackgrounds = false;
+    updatePricingDisplay();
     alert('Custom background ready!');
   });
 }
@@ -655,7 +770,7 @@ function generateSummaryHTML() {
   return `
     <h3>You're all set!</h3>
     <p><strong>Party:</strong> ${state.partyName}</p>
-    <p><strong>Background:</strong> ${state.background ? state.background.name : 'Not selected'}</p>
+    <p><strong>${getBackgroundLabel()}:</strong> ${getBackgroundSummaryText()}</p>
     <p><strong>People in photo:</strong> ${state.peopleCount}</p>
     <p><strong>Delivery:</strong> ${state.deliveryMethod}</p>
     <p><strong>Prints:</strong> ${state.prints}</p>
@@ -675,6 +790,10 @@ function capturePendingReceipt() {
   const emailList = collectEmailAddresses();
   const priceDetails = calculatePriceDetails();
   const priceText = priceDetails ? formatCurrency(priceDetails.total, priceDetails.currency) : 'Free';
+  const selectedBackgrounds = getSelectedBackgrounds();
+  const backgroundSummary = getBackgroundSummaryText();
+  const backgroundIdSummary = getBackgroundIdSummary();
+  const primaryBackground = selectedBackgrounds[0] || null;
 
   pendingReceipt = {
     customerNumber: photoID,
@@ -683,9 +802,10 @@ function capturePendingReceipt() {
     date: formattedDate,
     time: formattedTime,
     partyName: state.partyName,
-    background: state.background ? state.background.name : 'Custom Upload',
-    backgroundId: state.background ? state.background.id : 'custom',
-    backgroundImage: state.background ? state.background.image : state.customBackgroundData,
+    background: backgroundSummary,
+    backgroundId: backgroundIdSummary,
+    backgroundImage: primaryBackground ? primaryBackground.image : '',
+    backgroundSelections: selectedBackgrounds.map(item => ({ id: item.id, name: item.name })),
     deliveryMethod: state.deliveryMethod,
     prints: state.prints,
     emailCount: state.emailCount,
@@ -707,6 +827,9 @@ function renderReceipt() {
   const emails = pendingReceipt.emails.length ? pendingReceipt.emails.map(email => `<li>${email}</li>`).join('') : '<li>No emails requested</li>';
   const breakdownMarkup = buildPriceBreakdownMarkup(pendingReceipt);
   const multiBackgroundText = pendingReceipt.multipleBackgrounds ? 'Yes' : 'No';
+  const backgroundCount = Array.isArray(pendingReceipt.backgroundSelections) ? pendingReceipt.backgroundSelections.length : 0;
+  const backgroundLabel = backgroundCount > 1 ? 'Backgrounds' : 'Background';
+  const backgroundIdLabel = backgroundCount > 1 ? 'Background IDs' : 'Background ID';
 
   receipt.innerHTML = `
     <section class="receipt-section">
@@ -742,8 +865,8 @@ function renderReceipt() {
       <p><strong>Date:</strong> ${pendingReceipt.date}</p>
       <p><strong>Time:</strong> ${pendingReceipt.time}</p>
       <p><strong>People:</strong> ${pendingReceipt.peopleCount}</p>
-      <p><strong>Background:</strong> ${pendingReceipt.background}</p>
-      <p><strong>Background ID:</strong> ${pendingReceipt.backgroundId}</p>
+      <p><strong>${backgroundLabel}:</strong> ${pendingReceipt.background}</p>
+      <p><strong>${backgroundIdLabel}:</strong> ${pendingReceipt.backgroundId}</p>
       <p><strong>Emails:</strong></p>
       <ul>${emails}</ul>
       <p><strong>Email Count:</strong> ${pendingReceipt.emailCount}</p>
@@ -765,6 +888,7 @@ function resetKiosk() {
   Object.assign(state, {
     background: null,
     backgroundSource: null,
+    backgroundSelections: [],
     customBackgroundData: null,
     partyName: '',
     peopleCount: null,
@@ -779,7 +903,8 @@ function resetKiosk() {
 
   furthestProgressIndex = -1;
   document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
-  updateBackgroundPreview('');
+  updateBackgroundOptionSelectionClasses();
+  updateBackgroundPreview();
   document.querySelectorAll('.touch-selector').forEach(selector => selector.querySelectorAll('.touch-option').forEach(btn => btn.classList.remove('selected')));
   document.getElementById('party-name').value = '';
   document.getElementById('emailInputs').innerHTML = '';

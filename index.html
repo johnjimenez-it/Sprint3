@@ -30,15 +30,18 @@
       <h2>Select a Background</h2>
       <div class="background-layout">
         <div class="background-column">
-          <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
-          <div class="preview-card">
-            <h3>Preview</h3>
-            <div id="background-preview" class="background-preview">Choose a background</div>
-          </div>
           <div class="addon-card" aria-live="polite">
             <h3>Need multiple backgrounds?</h3>
             <p class="instruction" id="multi-background-note">Add a second background setup for an additional fee.</p>
             <button class="secondary" id="multi-background-toggle" type="button" aria-pressed="false">Add Multi-Background Package (+$10)</button>
+          </div>
+          <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
+          <div class="preview-card">
+            <h3>Preview</h3>
+            <div id="background-preview" class="background-preview" aria-live="polite">
+              <div class="preview-slot" data-slot="0">Choose a background</div>
+              <div class="preview-slot secondary" data-slot="1">Turn on Multi-Background to add another scene</div>
+            </div>
           </div>
         </div>
         <aside class="custom-background-panel" aria-label="Custom background tools">
