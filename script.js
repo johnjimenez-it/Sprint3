@@ -109,6 +109,7 @@ function showScreen(targetId) {
   }
 
   updateProgress(targetId);
+  updatePricingDisplay();
   resetIdleTimer();
 
   if (targetId === 'screen-review') {
@@ -995,12 +996,20 @@ function updatePricingDisplay() {
     return;
   }
 
+  const currentScreenId = screenOrder[currentScreenIndex] || 'screen-welcome';
+  const onWelcomeScreen = currentScreenId === 'screen-welcome';
+  const totalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
+
   const headerPrice = document.getElementById('eventPrice');
   if (headerPrice) {
-    if (details.basePrice) {
-      headerPrice.textContent = `Starting at ${formatCurrency(details.basePrice, details.currency)}`;
+    if (onWelcomeScreen) {
+      if (details.basePrice) {
+        headerPrice.textContent = `Starting at ${formatCurrency(details.basePrice, details.currency)}`;
+      } else {
+        headerPrice.textContent = 'Free Event';
+      }
     } else {
-      headerPrice.textContent = 'Free Event';
+      headerPrice.textContent = `Total: ${totalText}`;
     }
   }
 
@@ -1014,23 +1023,46 @@ function updatePricingDisplay() {
 
   const runningTotal = document.getElementById('running-total');
   if (runningTotal) {
-    const totalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-    const breakdownParts = [];
-    if (details.basePrice > 0) {
-      breakdownParts.push(`Base package ${formatCurrency(details.basePrice, details.currency)}`);
-    }
+    const breakdownItems = [
+      { label: 'Base package', amount: details.basePrice, isBase: true }
+    ];
+
     if (details.prints > 0) {
-      breakdownParts.push(`${details.prints} print${details.prints === 1 ? '' : 's'} ${formatCurrency(details.printCost, details.currency)}`);
+      breakdownItems.push({
+        label: `${details.prints} print${details.prints === 1 ? '' : 's'}`,
+        amount: details.printCost
+      });
     }
     if (details.emails > 0) {
-      breakdownParts.push(`${details.emails} email${details.emails === 1 ? '' : 's'} ${formatCurrency(details.emailCost, details.currency)}`);
+      breakdownItems.push({
+        label: `${details.emails} email${details.emails === 1 ? '' : 's'}`,
+        amount: details.emailCost
+      });
     }
     if (state.multipleBackgrounds) {
-      breakdownParts.push(`Multi-background ${formatCurrency(details.multiBackgroundCost, details.currency)}`);
+      breakdownItems.push({
+        label: 'Multi-background add-on',
+        amount: details.multiBackgroundCost
+      });
     }
-    runningTotal.textContent = breakdownParts.length
-      ? `Current total: ${totalText} (${breakdownParts.join(' + ')})`
-      : `Current total: ${totalText}`;
+
+    const breakdownMarkup = breakdownItems
+      .map(item => {
+        const amountText = item.amount > 0
+          ? formatCurrency(item.amount, details.currency)
+          : item.isBase
+            ? 'Free'
+            : 'Included';
+        return `<li><span class="item-label">${item.label}</span><span class="item-amount">${amountText}</span></li>`;
+      })
+      .join('');
+
+    const introText = onWelcomeScreen ? 'Package overview:' : 'Your selection includes:';
+    const runningMarkup = [
+      `<span class="running-total-label">${introText}</span>`,
+      `<ul class="running-total-breakdown">${breakdownMarkup}</ul>`
+    ].join('');
+    runningTotal.innerHTML = runningMarkup;
   }
 
   const paymentNote = document.getElementById('payment-note');
@@ -1050,7 +1082,8 @@ function updatePricingDisplay() {
     extras.push(state.multipleBackgrounds
       ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
       : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
-    paymentNote.textContent = `Current total: ${formatCurrency(details.total, details.currency)}. ${extras.join(' • ')}`;
+    const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
+    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' • ')}`;
   }
 
   const reviewSummary = document.getElementById('review-summary');
