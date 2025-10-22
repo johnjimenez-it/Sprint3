@@ -9,16 +9,21 @@
 <body>
   <main id="app">
     <header class="app-header">
-      <h1 id="eventName">Green Screen Express</h1>
-      <p class="subtitle" id="eventTagline">Tap to begin your photo experience</p>
+      <p class="subtitle" id="eventTagline">Tap anywhere to begin</p>
       <p class="price" id="eventPrice"></p>
       <div class="price running-total" id="running-total" aria-live="polite"></div>
     </header>
 
     <nav id="progress-indicator" class="progress-indicator" aria-label="Photo experience progress"></nav>
 
-    <section id="screen-welcome" class="screen active">
-      <button class="primary" id="start-btn" title="Tap to begin the kiosk flow">Start</button>
+    <section
+      id="screen-welcome"
+      class="screen active"
+      role="button"
+      tabindex="0"
+      aria-label="Tap anywhere to begin the kiosk flow"
+    >
+      <p class="welcome-instruction" aria-hidden="true">Tap anywhere to begin</p>
       <div class="info-card">
         <h2>Today's Event</h2>
         <p id="event-name"></p>

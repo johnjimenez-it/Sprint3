@@ -266,7 +266,17 @@ function init() {
 }
 
 function setupNavigation() {
-  document.getElementById('start-btn').addEventListener('click', () => showScreen('screen-background'));
+  const welcomeScreen = document.getElementById('screen-welcome');
+  if (welcomeScreen) {
+    const startExperience = () => showScreen('screen-background');
+    welcomeScreen.addEventListener('click', startExperience);
+    welcomeScreen.addEventListener('keydown', event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        startExperience();
+      }
+    });
+  }
   document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', goToNextScreen));
   document.querySelectorAll('[data-prev]').forEach(btn => btn.addEventListener('click', goToPreviousScreen));
 }
@@ -277,8 +287,10 @@ function populateEventInfo() {
     eventName.textContent = `${appConfig.eventName}`;
   }
   const headerName = document.getElementById('eventName');
-  headerName.textContent = appConfig.eventName;
-  document.getElementById('eventTagline').textContent = 'Tap to begin your photo experience';
+  if (headerName) {
+    headerName.textContent = appConfig.eventName;
+  }
+  document.getElementById('eventTagline').textContent = 'Tap anywhere to begin';
   const priceInfo = document.getElementById('price-info');
   const headerPrice = document.getElementById('eventPrice');
   const baseFormatted = formatCurrency(Number(appConfig.price || 0), appConfig.currency);

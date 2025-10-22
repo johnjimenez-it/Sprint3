@@ -54,6 +54,34 @@ body {
   display: block;
 }
 
+#screen-welcome {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  min-height: 420px;
+  transition: transform 0.2s ease;
+}
+
+#screen-welcome:focus-visible {
+  outline: 4px solid var(--secondary);
+  outline-offset: 6px;
+}
+
+#screen-welcome:active {
+  transform: scale(0.98);
+}
+
+.welcome-instruction {
+  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-weight: 600;
+  color: #335066;
+  margin: 0;
+}
+
 .screen h2 {
   font-size: 2rem;
   margin-top: 0;
