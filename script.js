@@ -248,7 +248,6 @@ function init() {
   populateBackgrounds();
   setupBackgroundAddons();
   populateTouchSelectors();
-  setupCustomBackground();
   setupSelfie();
   setupKeyboard();
   setupIdleTimer();
@@ -569,55 +568,6 @@ function reflectMultiBackgroundState() {
   updateBackgroundPreview();
 }
 
-function setupCustomBackground() {
-  const helpButton = document.getElementById('custom-background-help');
-  const modal = document.getElementById('custom-background-modal');
-  const modalClose = document.getElementById('modal-close');
-  const fileInput = document.getElementById('custom-background-input');
-  const useButton = document.getElementById('custom-background-use');
-  if (!helpButton || !modal || !modalClose || !fileInput || !useButton) {
-    return;
-  }
-  useButton.disabled = true;
-
-  helpButton.addEventListener('click', () => modal.classList.remove('hidden'));
-  modalClose.addEventListener('click', () => modal.classList.add('hidden'));
-  modal.addEventListener('click', event => {
-    if (event.target === modal) {
-      modal.classList.add('hidden');
-    }
-  });
-
-  fileInput.addEventListener('change', event => {
-    const file = event.target.files[0];
-    if (!file) {
-      useButton.disabled = true;
-      return;
-    }
-    const reader = new FileReader();
-    reader.onload = e => {
-      state.customBackgroundData = e.target.result;
-      useButton.disabled = false;
-    };
-    reader.readAsDataURL(file);
-  });
-
-  useButton.addEventListener('click', () => {
-    if (!state.customBackgroundData) return;
-    document.querySelectorAll('.background-option').forEach(btn => btn.classList.remove('selected'));
-    state.background = {
-      id: 'custom',
-      name: 'Custom Background',
-      image: `url(${state.customBackgroundData})`
-    };
-    state.backgroundSource = 'custom';
-    state.backgroundSelections = [state.background];
-    state.multipleBackgrounds = false;
-    updatePricingDisplay();
-    alert('Custom background ready!');
-  });
-}
-
 function renderEmailInputs(count = state.emailCount) {
   const container = document.getElementById('emailInputs');
   container.innerHTML = '';
@@ -932,8 +882,14 @@ function resetKiosk() {
   document.getElementById('party-name').value = '';
   document.getElementById('emailInputs').innerHTML = '';
   document.getElementById('review-summary').innerHTML = '';
-  document.getElementById('custom-background-input').value = '';
-  document.getElementById('custom-background-use').disabled = true;
+  const customBackgroundInput = document.getElementById('custom-background-input');
+  if (customBackgroundInput) {
+    customBackgroundInput.value = '';
+  }
+  const customBackgroundUseButton = document.getElementById('custom-background-use');
+  if (customBackgroundUseButton) {
+    customBackgroundUseButton.disabled = true;
+  }
   pendingReceipt = null;
   reflectMultiBackgroundState();
   updatePricingDisplay();
