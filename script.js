@@ -1074,8 +1074,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} ? ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} ? ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} x ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} x ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
