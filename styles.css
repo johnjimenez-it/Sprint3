@@ -143,6 +143,13 @@ html {
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
+.pill-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
 .pill-label {
   font-size: 0.8rem;
   text-transform: uppercase;
@@ -150,19 +157,29 @@ html {
   color: var(--text-muted);
 }
 
-.running-total {
-  font-size: 1.35rem;
-  font-weight: 600;
+.running-total-amount {
+  font-size: 1.45rem;
+  font-weight: 700;
   color: var(--text-primary);
-  min-height: 1.35rem;
+  min-height: 1.45rem;
 }
 
-.running-total-label {
-  display: block;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  color: var(--text-muted);
+.session-pill .pill-toggle {
+  width: 100%;
+  min-width: 0;
+  padding: 0.8rem 1rem;
+  font-size: 1rem;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.running-total-details {
+  margin-top: 0.65rem;
+  border-radius: 14px;
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  padding: 0.75rem 0.85rem;
+  box-shadow: var(--shadow-soft);
 }
 
 .running-total-breakdown {
@@ -192,6 +209,12 @@ html {
 .running-total-breakdown .item-amount {
   font-weight: 700;
   color: var(--text-primary);
+}
+
+.running-total-empty {
+  margin: 0.6rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
 }
 
 .progress-wrapper {
@@ -361,6 +384,16 @@ html {
   gap: 0.75rem;
   background: var(--surface);
   border: 1px solid var(--outline);
+}
+
+.addon-card .addon-toggle {
+  width: 100%;
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.addon-card .addon-toggle::after {
+  content: '';
 }
 
 .background-layout {
@@ -582,12 +615,24 @@ label span {
   margin-top: 1.25rem;
   display: grid;
   gap: 1rem;
+  min-height: 200px;
+  align-content: flex-start;
 }
 
 .email-chip {
   display: flex;
   align-items: center;
   gap: 1rem;
+}
+
+.email-placeholder {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  background: var(--surface);
+  border: 1px dashed var(--outline);
+  border-radius: 16px;
+  padding: 1rem 1.25rem;
+  line-height: 1.5;
 }
 
 .email-chip span {
@@ -667,11 +712,31 @@ label span {
   background: #ffffff;
   color: var(--text-primary);
   border: 1.5px solid var(--outline);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.12);
 }
 
 .secondary:hover {
   border-color: rgba(37, 99, 235, 0.3);
   background: rgba(37, 99, 235, 0.08);
+}
+
+.secondary:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.secondary.ghost {
+  background: rgba(255, 255, 255, 0.78);
+  border-style: dashed;
+  border-color: rgba(17, 24, 39, 0.28);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.1);
+}
+
+.secondary.ghost:hover {
+  background: rgba(37, 99, 235, 0.08);
+  border-style: solid;
 }
 
 .addon-card .secondary.active {
@@ -702,6 +767,66 @@ label span {
   line-height: 1.65;
   display: grid;
   gap: 1rem;
+}
+
+.payment-summary {
+  margin-top: 1.25rem;
+}
+
+.payment-breakdown {
+  border-radius: 16px;
+  border: 1px solid var(--outline);
+  background: var(--surface);
+  padding: 1rem 1.25rem;
+  box-shadow: var(--shadow-soft);
+  display: grid;
+  gap: 0.85rem;
+}
+
+.payment-breakdown-title {
+  margin: 0;
+  font-size: 1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-muted);
+}
+
+.payment-breakdown-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.45rem;
+}
+
+.payment-breakdown-list li {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  align-items: center;
+  font-size: 1.05rem;
+}
+
+.payment-breakdown-list li .label {
+  color: var(--text-muted);
+}
+
+.payment-breakdown-list li .amount {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.payment-breakdown-list li.total {
+  margin-top: 0.45rem;
+  padding-top: 0.55rem;
+  border-top: 1px solid var(--outline);
+  font-weight: 700;
+}
+
+.payment-breakdown-note {
+  margin: 0.5rem 0 0;
+  font-size: 0.95rem;
+  color: var(--text-muted);
 }
 
 .price-breakdown {
@@ -867,6 +992,18 @@ label span {
   border-color: rgba(37, 99, 235, 0.35);
 }
 
+.keyboard-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.keyboard-actions .primary,
+.keyboard-actions .secondary {
+  min-width: 150px;
+}
+
 .hidden {
   display: none !important;
 }
@@ -894,6 +1031,24 @@ label span {
   margin: 0;
   font-size: clamp(2.4rem, 4.2vw, 3.1rem);
   letter-spacing: 0.015em;
+}
+
+.welcome-actions {
+  margin-top: clamp(1.25rem, 2vw, 1.75rem);
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.start-experience-btn {
+  width: min(100%, 320px);
+  justify-content: center;
+  background: linear-gradient(135deg, #9b1c1c, #5f0f0f);
+  box-shadow: 0 24px 48px rgba(95, 15, 15, 0.35);
+}
+
+.start-experience-btn:hover {
+  filter: brightness(1.05);
 }
 
 .welcome-graphic {

@@ -23,8 +23,12 @@
       </div>
       <div class="session-info">
         <div class="session-pill">
-          <span class="pill-label">Running total</span>
-          <div class="running-total" id="running-total" aria-live="polite"></div>
+          <div class="pill-header">
+            <span class="pill-label">Running total</span>
+            <span class="running-total-amount" id="running-total-amount" aria-live="polite"></span>
+          </div>
+          <button class="secondary pill-toggle" id="running-total-toggle" type="button" aria-expanded="false">View price breakdown</button>
+          <div class="running-total-details hidden" id="running-total-details"></div>
         </div>
       </div>
     </header>
@@ -38,14 +42,15 @@
       <section
       id="screen-welcome"
       class="screen active"
-      role="button"
-      tabindex="0"
-      aria-label="Tap anywhere to begin the kiosk flow"
+      aria-labelledby="welcome-heading"
     >
         <div class="welcome-hero">
           <div class="welcome-copy">
-            <h2>Step into the green screen studio</h2>
-            <p class="welcome-instruction" id="welcome-instruction" aria-hidden="true">Tap anywhere to begin</p>
+            <h2 id="welcome-heading">Step into the green screen studio</h2>
+            <p class="welcome-instruction" id="welcome-instruction">Tap start to begin your session</p>
+            <div class="welcome-actions">
+              <button id="start-experience-btn" class="primary start-experience-btn" type="button">Start the photo experience</button>
+            </div>
           </div>
           <div class="welcome-graphic" aria-hidden="true">
             <span class="graphic-ring"></span>
@@ -70,7 +75,7 @@
             <div class="addon-card" aria-live="polite">
               <h3>Need multiple backgrounds?</h3>
               <p class="instruction" id="multi-background-note">Add a second background setup for an additional fee.</p>
-              <button class="secondary" id="multi-background-toggle" type="button" aria-pressed="false">Add Multi-Background Package (+$10)</button>
+              <button class="secondary addon-toggle" id="multi-background-toggle" type="button" aria-pressed="false">Add Multi-Background Package (+$10)</button>
             </div>
             <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
             <div class="preview-card">
@@ -79,6 +84,7 @@
                 <div class="preview-slot" data-slot="0">Choose a background</div>
                 <div class="preview-slot secondary" data-slot="1">Turn on Multi-Background to add another scene</div>
               </div>
+              <button class="secondary ghost" id="clear-backgrounds-btn" type="button">Clear background selections</button>
             </div>
           </div>
         </div>
@@ -161,6 +167,9 @@
           <p id="payment-note" class="instruction"></p>
         </div>
         <div class="touch-selector" id="payment-method"></div>
+        <div class="payment-summary">
+          <div id="payment-breakdown" class="payment-breakdown" aria-live="polite"></div>
+        </div>
         <div class="nav-buttons">
           <button class="secondary" data-prev>Back</button>
           <button class="primary" data-next>Review</button>
@@ -192,11 +201,14 @@
       </section>
 
       <section id="screen-keyboard" class="screen keyboard-screen">
-        <h2>Tap letters to type</h2>
+        <h2 id="keyboard-title">On-screen keyboard</h2>
         <div id="keyboard-display" class="keyboard-display"></div>
         <div class="keyboard-keys" id="keyboard-keys"></div>
-        <button class="primary" id="keyboard-done">Done</button>
-        <button class="secondary" id="keyboard-clear">Clear</button>
+        <div class="keyboard-actions">
+          <button class="primary" id="keyboard-done">Save</button>
+          <button class="secondary" id="keyboard-clear">Clear</button>
+          <button class="secondary ghost" id="keyboard-cancel">Cancel</button>
+        </div>
       </section>
     </div>
   </main>

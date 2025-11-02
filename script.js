@@ -56,6 +56,7 @@ let selfieStream = null;
 let appConfig = null;
 let pendingReceipt = null;
 let furthestProgressIndex = -1;
+let runningTotalExpanded = false;
 
 const backgroundGradients = {
   'fsu-garnet': 'linear-gradient(135deg, #782F40, #9b4a54 55%, #CEB888)',
@@ -243,6 +244,7 @@ function renderProgressIndicator() {
 function init() {
   if (!appConfig) return;
   renderProgressIndicator();
+  setupRunningTotalToggle();
   setupNavigation();
   populateEventInfo();
   populateBackgrounds();
@@ -268,11 +270,11 @@ function init() {
 }
 
 function setupNavigation() {
-  const welcomeScreen = document.getElementById('screen-welcome');
-  if (welcomeScreen) {
-    const startExperience = () => showScreen('screen-background');
-    welcomeScreen.addEventListener('click', startExperience);
-    welcomeScreen.addEventListener('keydown', event => {
+  const startButton = document.getElementById('start-experience-btn');
+  const startExperience = () => showScreen('screen-background');
+  if (startButton) {
+    startButton.addEventListener('click', startExperience);
+    startButton.addEventListener('keydown', event => {
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         startExperience();
@@ -281,6 +283,24 @@ function setupNavigation() {
   }
   document.querySelectorAll('[data-next]').forEach(btn => btn.addEventListener('click', goToNextScreen));
   document.querySelectorAll('[data-prev]').forEach(btn => btn.addEventListener('click', goToPreviousScreen));
+}
+
+function setupRunningTotalToggle() {
+  const toggle = document.getElementById('running-total-toggle');
+  const details = document.getElementById('running-total-details');
+  if (!toggle || !details) {
+    return;
+  }
+  runningTotalExpanded = false;
+  details.classList.add('hidden');
+  toggle.setAttribute('aria-expanded', 'false');
+  toggle.textContent = 'View price breakdown';
+  toggle.addEventListener('click', () => {
+    runningTotalExpanded = !runningTotalExpanded;
+    details.classList.toggle('hidden', !runningTotalExpanded);
+    toggle.setAttribute('aria-expanded', runningTotalExpanded ? 'true' : 'false');
+    toggle.textContent = runningTotalExpanded ? 'Hide price breakdown' : 'View price breakdown';
+  });
 }
 
 function populateEventInfo() {
@@ -375,6 +395,7 @@ function updateBackgroundOptionSelectionClasses() {
 
 function updateBackgroundPreview() {
   const preview = document.getElementById('background-preview');
+  const clearButton = document.getElementById('clear-backgrounds-btn');
   if (!preview) {
     return;
   }
@@ -411,6 +432,10 @@ function updateBackgroundPreview() {
       secondarySlot.style.backgroundImage = '';
       secondarySlot.textContent = 'Turn on Multi-Background to add another scene';
     }
+  }
+
+  if (clearButton) {
+    clearButton.disabled = !state.backgroundSelections.length && !state.multipleBackgrounds;
   }
 }
 
@@ -527,6 +552,7 @@ function createTouchSelector(container, options, labelFormatter, onSelect) {
 
 function setupBackgroundAddons() {
   const toggle = document.getElementById('multi-background-toggle');
+  const clearButton = document.getElementById('clear-backgrounds-btn');
   if (!toggle) {
     return;
   }
@@ -542,12 +568,27 @@ function setupBackgroundAddons() {
     }
     updatePricingDisplay();
   });
+  if (clearButton) {
+    clearButton.addEventListener('click', clearBackgroundSelections);
+  }
   reflectMultiBackgroundState();
+}
+
+function clearBackgroundSelections() {
+  state.backgroundSelections = [];
+  state.background = null;
+  if (state.multipleBackgrounds) {
+    state.multipleBackgrounds = false;
+  }
+  updateBackgroundOptionSelectionClasses();
+  updateBackgroundPreview();
+  updatePricingDisplay();
 }
 
 function reflectMultiBackgroundState() {
   const toggle = document.getElementById('multi-background-toggle');
   const note = document.getElementById('multi-background-note');
+  const clearButton = document.getElementById('clear-backgrounds-btn');
   if (!toggle) {
     return;
   }
@@ -557,21 +598,31 @@ function reflectMultiBackgroundState() {
   toggle.classList.toggle('active', isActive);
   toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   toggle.textContent = isActive
-    ? `Multi-Background Package Added (+${multiFee})`
-    : `Add Multi-Background Package (+${multiFee})`;
+    ? 'Multi-background package on - tap to remove'
+    : `Add multi-background package (+${multiFee})`;
   if (note) {
     note.textContent = isActive
-      ? 'Select two backgrounds to capture multiple scenes during your session.'
+      ? 'Select two backgrounds to capture multiple scenes. Tap again to turn the add-on off or clear your selections below.'
       : 'Add a second background setup for an additional fee.';
   }
   updateBackgroundOptionSelectionClasses();
   updateBackgroundPreview();
+  if (clearButton) {
+    clearButton.disabled = !state.backgroundSelections.length && !state.multipleBackgrounds;
+  }
 }
 
 function renderEmailInputs(count = state.emailCount) {
   const container = document.getElementById('emailInputs');
   container.innerHTML = '';
   state.emails = new Array(count).fill('');
+  if (count === 0) {
+    const placeholder = document.createElement('p');
+    placeholder.className = 'email-placeholder';
+    placeholder.textContent = 'Select email delivery above to add recipient addresses.';
+    container.appendChild(placeholder);
+    return;
+  }
   for (let i = 0; i < count; i++) {
     const wrapper = document.createElement('div');
     wrapper.className = 'email-chip touch-field';
@@ -643,6 +694,7 @@ function setupKeyboard() {
   const keyboardKeys = document.getElementById('keyboard-keys');
   const keyboardDone = document.getElementById('keyboard-done');
   const keyboardClear = document.getElementById('keyboard-clear');
+  const keyboardCancel = document.getElementById('keyboard-cancel');
   const keyboardDisplay = document.getElementById('keyboard-display');
 
   const layout = [
@@ -650,7 +702,7 @@ function setupKeyboard() {
     'Q','W','E','R','T','Y','U','I','O','P',
     'A','S','D','F','G','H','J','K','L','@',
     'Z','X','C','V','B','N','M','.','-','_',
-    'Space','⌫'
+    'Space','Backspace'
   ];
 
   layout.forEach(char => {
@@ -658,7 +710,7 @@ function setupKeyboard() {
     key.type = 'button';
     key.textContent = char === 'Space' ? 'Space' : char;
     key.addEventListener('click', () => {
-      if (char === '⌫') {
+      if (char === 'Backspace') {
         keyboardValue = keyboardValue.slice(0, -1);
       } else if (char === 'Space') {
         keyboardValue += ' ';
@@ -688,6 +740,12 @@ function setupKeyboard() {
     keyboardDisplay.textContent = '';
   });
 
+  if (keyboardCancel) {
+    keyboardCancel.addEventListener('click', () => {
+      closeKeyboard();
+    });
+  }
+
   document.querySelectorAll('[data-keyboard-target]').forEach(wrapper => {
     const input = document.getElementById(wrapper.dataset.keyboardTarget);
     input.readOnly = true;
@@ -713,6 +771,11 @@ function closeKeyboard() {
   currentKeyboardInput = null;
   const keyboardScreen = document.getElementById('screen-keyboard');
   keyboardScreen.classList.remove('active');
+  keyboardValue = '';
+  const keyboardDisplay = document.getElementById('keyboard-display');
+  if (keyboardDisplay) {
+    keyboardDisplay.textContent = '';
+  }
 }
 
 function isValidEmail(email) {
@@ -965,6 +1028,36 @@ function calculatePriceDetails() {
   };
 }
 
+function buildPricingBreakdownItems(details) {
+  const items = [
+    { label: 'Base package', amount: details.basePrice, isBase: true }
+  ];
+  const currency = details.currency || 'USD';
+
+  if (details.prints > 0) {
+    items.push({
+      label: `Photo prints (${details.prints} x ${formatCurrency(details.perPrintFee, currency)})`,
+      amount: details.printCost
+    });
+  }
+
+  if (details.emails > 0) {
+    items.push({
+      label: `Email deliveries (${details.emails} x ${formatCurrency(details.perEmailFee, currency)})`,
+      amount: details.emailCost
+    });
+  }
+
+  if (state.multipleBackgrounds) {
+    items.push({
+      label: 'Multi-background add-on',
+      amount: details.multiBackgroundCost
+    });
+  }
+
+  return items;
+}
+
 function updatePricingDisplay() {
   if (!appConfig) {
     return;
@@ -984,31 +1077,22 @@ function updatePricingDisplay() {
     priceInfo.textContent = priceMessage;
   }
 
-  const runningTotal = document.getElementById('running-total');
-  if (runningTotal) {
-    const breakdownItems = [
-      { label: 'Base package', amount: details.basePrice, isBase: true }
-    ];
+  const breakdownItems = buildPricingBreakdownItems(details);
+  const hasExtras = breakdownItems.some(item => !item.isBase);
 
-    if (details.prints > 0) {
-      breakdownItems.push({
-        label: `${details.prints} print${details.prints === 1 ? '' : 's'}`,
-        amount: details.printCost
-      });
-    }
-    if (details.emails > 0) {
-      breakdownItems.push({
-        label: `${details.emails} email${details.emails === 1 ? '' : 's'}`,
-        amount: details.emailCost
-      });
-    }
-    if (state.multipleBackgrounds) {
-      breakdownItems.push({
-        label: 'Multi-background add-on',
-        amount: details.multiBackgroundCost
-      });
-    }
+  if (onWelcomeScreen && runningTotalExpanded) {
+    runningTotalExpanded = false;
+  }
 
+  const runningTotalAmount = document.getElementById('running-total-amount');
+  if (runningTotalAmount) {
+    runningTotalAmount.textContent = details.total > 0
+      ? formatCurrency(details.total, details.currency)
+      : 'Free';
+  }
+
+  const runningTotalDetails = document.getElementById('running-total-details');
+  if (runningTotalDetails) {
     const breakdownMarkup = breakdownItems
       .map(item => {
         const amountText = item.amount > 0
@@ -1019,34 +1103,48 @@ function updatePricingDisplay() {
         return `<li><span class="item-label">${item.label}</span><span class="item-amount">${amountText}</span></li>`;
       })
       .join('');
+    const emptyMessage = hasExtras ? '' : '<p class="running-total-empty">Add prints, emails, or the multi-background package to see add-ons here.</p>';
+    runningTotalDetails.innerHTML = `<ul class="running-total-breakdown">${breakdownMarkup}</ul>${emptyMessage}`;
+    runningTotalDetails.classList.toggle('hidden', !runningTotalExpanded);
+  }
 
-    const introText = onWelcomeScreen ? 'Package overview:' : 'Your selection includes:';
-    const runningMarkup = [
-      `<span class="running-total-label">${introText}</span>`,
-      `<ul class="running-total-breakdown">${breakdownMarkup}</ul>`
-    ].join('');
-    runningTotal.innerHTML = runningMarkup;
+  const runningTotalToggle = document.getElementById('running-total-toggle');
+  if (runningTotalToggle) {
+    runningTotalToggle.setAttribute('aria-expanded', runningTotalExpanded ? 'true' : 'false');
+    runningTotalToggle.textContent = runningTotalExpanded ? 'Hide price breakdown' : 'View price breakdown';
   }
 
   const paymentNote = document.getElementById('payment-note');
   if (paymentNote) {
-    const extras = [];
-    extras.push(`Base package ${formatCurrency(details.basePrice, details.currency)}`);
-    if (details.prints > 0) {
-      extras.push(`${details.prints} print${details.prints === 1 ? '' : 's'} = ${formatCurrency(details.printCost, details.currency)}`);
-    } else {
-      extras.push(`${formatCurrency(details.perPrintFee, details.currency)} per print`);
-    }
-    if (details.emails > 0) {
-      extras.push(`${details.emails} email${details.emails === 1 ? '' : 's'} = ${formatCurrency(details.emailCost, details.currency)}`);
-    } else {
-      extras.push(`${formatCurrency(details.perEmailFee, details.currency)} per email`);
-    }
-    extras.push(state.multipleBackgrounds
-      ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
-      : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
     const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' • ')}`;
+    const addOnMessage = hasExtras
+      ? 'Review the itemized costs below before choosing a payment method.'
+      : `Add-ons remain available: prints ${formatCurrency(details.perPrintFee, details.currency)} each, emails ${formatCurrency(details.perEmailFee, details.currency)} each, multi-background add-on ${formatCurrency(details.multiBackgroundFee, details.currency)}.`;
+    paymentNote.textContent = `Total due today: ${paymentTotalText}. ${addOnMessage}`;
+  }
+
+  const paymentBreakdown = document.getElementById('payment-breakdown');
+  if (paymentBreakdown) {
+    const listMarkup = breakdownItems
+      .map(item => {
+        const amountText = item.amount > 0
+          ? formatCurrency(item.amount, details.currency)
+          : item.isBase
+            ? 'Free'
+            : 'Included';
+        return `<li><span class="label">${item.label}</span><span class="amount">${amountText}</span></li>`;
+      })
+      .join('');
+    const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
+    const emptyMessage = hasExtras ? '' : '<p class="payment-breakdown-note">No add-ons selected yet. You can always add prints, emails, or the multi-background package before checkout.</p>';
+    paymentBreakdown.innerHTML = `
+      <h3 class="payment-breakdown-title">Price breakdown</h3>
+      <ul class="payment-breakdown-list">
+        ${listMarkup}
+        <li class="total"><span class="label">Total</span><span class="amount">${paymentTotalText}</span></li>
+      </ul>
+      ${emptyMessage}
+    `;
   }
 
   const reviewSummary = document.getElementById('review-summary');
@@ -1069,8 +1167,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} × ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} × ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} x ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} x ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
