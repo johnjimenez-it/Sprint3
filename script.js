@@ -1321,4 +1321,5 @@ function updateIdleCountdown(value) {
   }
 }
 
+window.togglePriceBreakdown = togglePriceBreakdown;
 window.addEventListener('DOMContentLoaded', loadConfig);
