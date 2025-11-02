@@ -557,11 +557,11 @@ function reflectMultiBackgroundState() {
   toggle.classList.toggle('active', isActive);
   toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
   toggle.textContent = isActive
-    ? `Multi-Background Package Added (+${multiFee})`
+    ? `Remove Multi-Background Package (-${multiFee})`
     : `Add Multi-Background Package (+${multiFee})`;
   if (note) {
     note.textContent = isActive
-      ? 'Select two backgrounds to capture multiple scenes during your session.'
+      ? 'Select two backgrounds to capture multiple scenes during your session. Tap the button above to remove this add-on.'
       : 'Add a second background setup for an additional fee.';
   }
   updateBackgroundOptionSelectionClasses();
@@ -643,6 +643,7 @@ function setupKeyboard() {
   const keyboardKeys = document.getElementById('keyboard-keys');
   const keyboardDone = document.getElementById('keyboard-done');
   const keyboardClear = document.getElementById('keyboard-clear');
+  const keyboardCancel = document.getElementById('keyboard-cancel');
   const keyboardDisplay = document.getElementById('keyboard-display');
 
   const layout = [
@@ -650,7 +651,7 @@ function setupKeyboard() {
     'Q','W','E','R','T','Y','U','I','O','P',
     'A','S','D','F','G','H','J','K','L','@',
     'Z','X','C','V','B','N','M','.','-','_',
-    'Space','⌫'
+    'Space','?'
   ];
 
   layout.forEach(char => {
@@ -658,7 +659,7 @@ function setupKeyboard() {
     key.type = 'button';
     key.textContent = char === 'Space' ? 'Space' : char;
     key.addEventListener('click', () => {
-      if (char === '⌫') {
+      if (char === '?') {
         keyboardValue = keyboardValue.slice(0, -1);
       } else if (char === 'Space') {
         keyboardValue += ' ';
@@ -686,6 +687,10 @@ function setupKeyboard() {
   keyboardClear.addEventListener('click', () => {
     keyboardValue = '';
     keyboardDisplay.textContent = '';
+  });
+
+  keyboardCancel.addEventListener('click', () => {
+    closeKeyboard();
   });
 
   document.querySelectorAll('[data-keyboard-target]').forEach(wrapper => {
@@ -1046,7 +1051,7 @@ function updatePricingDisplay() {
       ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
       : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
     const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' • ')}`;
+    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' ? ')}`;
   }
 
   const reviewSummary = document.getElementById('review-summary');
@@ -1069,8 +1074,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} × ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} × ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} ? ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} ? ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
@@ -1078,7 +1083,15 @@ function buildPriceBreakdownMarkup(source) {
   lines.push(priceBreakdownLine(multiLabel, multiAmount, currency));
   lines.push(priceBreakdownLine('Total', charges.total, currency, true));
 
-  return `<div class="price-breakdown"><h4>Price Breakdown</h4><ul>${lines.join('')}</ul></div>`;
+  return `<div class="price-breakdown"><h4 onclick="togglePriceBreakdown(this)">Price Breakdown (tap to toggle)</h4><ul>${lines.join('')}</ul></div>`;
+}
+
+function togglePriceBreakdown(header) {
+  header.classList.toggle('collapsed');
+  const list = header.nextElementSibling;
+  if (list && list.tagName === 'UL') {
+    list.classList.toggle('collapsed');
+  }
 }
 
 function priceBreakdownLine(label, amount, currency, isTotal = false) {
@@ -1269,4 +1282,5 @@ function updateIdleCountdown(value) {
   }
 }
 
+window.togglePriceBreakdown = togglePriceBreakdown;
 window.addEventListener('DOMContentLoaded', loadConfig);
