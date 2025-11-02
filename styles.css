@@ -311,6 +311,7 @@ html {
   box-shadow: var(--shadow-soft);
   color: var(--text-primary);
   overflow: visible;
+  min-height: auto;
 }
 
 .screen.active {
@@ -582,10 +583,49 @@ label span {
   outline-offset: 2px;
 }
 
+.payment-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.payment-total-display {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem 1.5rem;
+  background: var(--surface);
+  border-radius: 18px;
+  border: 1px solid var(--outline);
+  box-shadow: var(--shadow-soft);
+}
+
+.payment-total-display .total-label {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.payment-total-display .total-amount {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+}
+
 .email-container {
   margin-top: 1.25rem;
   display: grid;
   gap: 1rem;
+  max-height: none;
+  overflow: visible;
+}
+
+#screen-delivery {
+  overflow: visible;
+}
+
+#screen-delivery .screen {
+  overflow: visible;
 }
 
 .email-chip {
@@ -671,7 +711,7 @@ label span {
   background: #ffffff;
   color: var(--text-primary);
   border: 1.5px solid var(--outline);
-  box-shadow: 0 8px 16px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 18px 40px rgba(37, 99, 235, 0.25);
 }
 
 .secondary:hover {
@@ -684,6 +724,18 @@ label span {
   color: var(--primary-dark);
   border-color: rgba(37, 99, 235, 0.45);
   box-shadow: 0 16px 32px var(--primary-glow);
+}
+
+.remove-button {
+  margin-top: 0.75rem;
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
+  border-color: rgba(220, 38, 38, 0.3);
+}
+
+.remove-button:hover {
+  background: rgba(220, 38, 38, 0.15);
+  border-color: rgba(220, 38, 38, 0.4);
 }
 
 .primary:focus-visible,
@@ -715,8 +767,20 @@ label span {
   border-top: 1px solid var(--outline);
 }
 
-.price-breakdown h4 {
-  margin: 0 0 0.75rem;
+.price-breakdown-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 0.5rem 0;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+}
+
+.price-breakdown-toggle h4 {
+  margin: 0;
   font-size: 1.1rem;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -741,6 +805,20 @@ label span {
 
 .price-breakdown h4.collapsed::after {
   transform: rotate(-90deg);
+}
+
+.price-breakdown-toggle .toggle-icon {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  transition: transform 0.2s ease;
+}
+
+.price-breakdown-list {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.4rem;
 }
 
 .price-breakdown ul {
@@ -913,6 +991,19 @@ label span {
 .keyboard-keys button:active {
   background: rgba(37, 99, 235, 0.12);
   border-color: rgba(37, 99, 235, 0.35);
+}
+
+.keyboard-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: min(90vw, 720px);
+}
+
+.keyboard-actions .primary,
+.keyboard-actions .secondary {
+  min-width: 140px;
 }
 
 .hidden {

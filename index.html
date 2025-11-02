@@ -68,9 +68,10 @@
         <div class="background-layout">
           <div class="background-column">
             <div class="addon-card" aria-live="polite">
-              <h3>Need multiple backgrounds?</h3>
+              <h3>Multiple backgrounds</h3>
               <p class="instruction" id="multi-background-note">Add a second background setup for an additional fee.</p>
               <button class="secondary" id="multi-background-toggle" type="button" aria-pressed="false">Add Multi-Background Package (+$10)</button>
+              <button class="secondary remove-button" id="multi-background-remove" type="button" style="display: none;">Remove Multi-Background Package</button>
             </div>
             <div id="background-grid" class="background-grid" role="group" aria-label="Background choices"></div>
             <div class="preview-card">
@@ -160,7 +161,13 @@
           <h2>Payment</h2>
           <p id="payment-note" class="instruction"></p>
         </div>
-        <div class="touch-selector" id="payment-method"></div>
+        <div class="payment-content">
+          <div class="touch-selector" id="payment-method"></div>
+          <div class="payment-total-display">
+            <span class="total-label">Total:</span>
+            <span class="total-amount" id="payment-total-amount"></span>
+          </div>
+        </div>
         <div class="nav-buttons">
           <button class="secondary" data-prev>Back</button>
           <button class="primary" data-next>Review</button>
@@ -192,13 +199,13 @@
       </section>
 
       <section id="screen-keyboard" class="screen keyboard-screen">
-        <h2>Enter your text</h2>
+        <h2>Enter text using the keyboard</h2>
         <div id="keyboard-display" class="keyboard-display"></div>
         <div class="keyboard-keys" id="keyboard-keys"></div>
         <div class="keyboard-actions">
-          <button class="primary" id="keyboard-done">Done</button>
-          <button class="secondary" id="keyboard-clear">Clear All</button>
           <button class="secondary" id="keyboard-cancel">Cancel</button>
+          <button class="secondary" id="keyboard-clear">Clear</button>
+          <button class="primary" id="keyboard-done">Done</button>
         </div>
       </section>
     </div>

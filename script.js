@@ -256,6 +256,7 @@ function init() {
   document.getElementById('finish-btn').addEventListener('click', resetKiosk);
   document.getElementById('cancel-confirm').addEventListener('click', hideConfirmModal);
   document.getElementById('continue-confirm').addEventListener('click', finalizeTransaction);
+  setupPriceBreakdownToggle();
   const idleStayButton = document.getElementById('idle-stay');
   if (idleStayButton) {
     idleStayButton.addEventListener('click', () => {
@@ -527,6 +528,7 @@ function createTouchSelector(container, options, labelFormatter, onSelect) {
 
 function setupBackgroundAddons() {
   const toggle = document.getElementById('multi-background-toggle');
+  const removeBtn = document.getElementById('multi-background-remove');
   if (!toggle) {
     return;
   }
@@ -540,13 +542,24 @@ function setupBackgroundAddons() {
       state.backgroundSelections = state.backgroundSelections.slice(0, 1);
       state.background = state.backgroundSelections[0] || null;
     }
+    reflectMultiBackgroundState();
     updatePricingDisplay();
   });
+  if (removeBtn) {
+    removeBtn.addEventListener('click', () => {
+      state.multipleBackgrounds = false;
+      state.backgroundSelections = state.backgroundSelections.slice(0, 1);
+      state.background = state.backgroundSelections[0] || null;
+      reflectMultiBackgroundState();
+      updatePricingDisplay();
+    });
+  }
   reflectMultiBackgroundState();
 }
 
 function reflectMultiBackgroundState() {
   const toggle = document.getElementById('multi-background-toggle');
+  const removeBtn = document.getElementById('multi-background-remove');
   const note = document.getElementById('multi-background-note');
   if (!toggle) {
     return;
@@ -556,12 +569,17 @@ function reflectMultiBackgroundState() {
   const multiFee = formatCurrency(getFeeValue('multiBackgroundFee', PRICING_DEFAULTS.multiBackgroundFee), currency);
   toggle.classList.toggle('active', isActive);
   toggle.setAttribute('aria-pressed', isActive ? 'true' : 'false');
-  toggle.textContent = isActive
-    ? `Remove Multi-Background Package (-${multiFee})`
-    : `Add Multi-Background Package (+${multiFee})`;
+  toggle.style.display = isActive ? 'none' : 'inline-flex';
+  if (removeBtn) {
+    removeBtn.style.display = isActive ? 'inline-flex' : 'none';
+  }
+  toggle.textContent = `Add Multi-Background Package (+${multiFee})`;
+  if (removeBtn) {
+    removeBtn.textContent = `Remove Multi-Background Package (-${multiFee})`;
+  }
   if (note) {
     note.textContent = isActive
-      ? 'Select two backgrounds to capture multiple scenes during your session. Tap the button above to remove this add-on.'
+      ? 'Select two backgrounds to capture multiple scenes during your session. Tap "Remove" to cancel this add-on.'
       : 'Add a second background setup for an additional fee.';
   }
   updateBackgroundOptionSelectionClasses();
@@ -690,6 +708,8 @@ function setupKeyboard() {
   });
 
   keyboardCancel.addEventListener('click', () => {
+    keyboardValue = '';
+    keyboardDisplay.textContent = '';
     closeKeyboard();
   });
 
@@ -859,6 +879,21 @@ function renderReceipt() {
       ${state.selfieData ? `<img class="selfie-thumbnail" src="${state.selfieData}" alt="Customer quick selfie" />` : ''}
     </section>
   `;
+}
+
+function setupPriceBreakdownToggle() {
+  document.addEventListener('click', (event) => {
+    if (event.target.closest('.price-breakdown-toggle')) {
+      const toggle = event.target.closest('.price-breakdown-toggle');
+      const list = toggle.closest('.price-breakdown').querySelector('.price-breakdown-list');
+      const icon = toggle.querySelector('.toggle-icon');
+      const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+      
+      toggle.setAttribute('aria-expanded', !isExpanded);
+      list.style.display = isExpanded ? 'none' : 'grid';
+      icon.textContent = isExpanded ? '?' : '?';
+    }
+  });
 }
 
 function resetKiosk() {
@@ -1054,6 +1089,12 @@ function updatePricingDisplay() {
     paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' ? ')}`;
   }
 
+  const paymentTotalAmount = document.getElementById('payment-total-amount');
+  if (paymentTotalAmount) {
+    const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
+    paymentTotalAmount.textContent = paymentTotalText;
+  }
+
   const reviewSummary = document.getElementById('review-summary');
   if (reviewSummary && reviewSummary.innerHTML.trim()) {
     reviewSummary.innerHTML = generateSummaryHTML();
@@ -1074,8 +1115,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} x ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} x ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} ? ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} ? ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
@@ -1083,15 +1124,13 @@ function buildPriceBreakdownMarkup(source) {
   lines.push(priceBreakdownLine(multiLabel, multiAmount, currency));
   lines.push(priceBreakdownLine('Total', charges.total, currency, true));
 
-  return `<div class="price-breakdown"><h4 onclick="togglePriceBreakdown(this)">Price Breakdown (tap to toggle)</h4><ul>${lines.join('')}</ul></div>`;
-}
-
-function togglePriceBreakdown(header) {
-  header.classList.toggle('collapsed');
-  const list = header.nextElementSibling;
-  if (list && list.tagName === 'UL') {
-    list.classList.toggle('collapsed');
-  }
+  return `<div class="price-breakdown">
+    <button class="price-breakdown-toggle" type="button" aria-expanded="false">
+      <h4>Price Breakdown</h4>
+      <span class="toggle-icon">?</span>
+    </button>
+    <ul class="price-breakdown-list" style="display: none;">${lines.join('')}</ul>
+  </div>`;
 }
 
 function priceBreakdownLine(label, amount, currency, isTotal = false) {
