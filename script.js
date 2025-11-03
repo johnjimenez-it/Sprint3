@@ -891,7 +891,7 @@ function setupPriceBreakdownToggle() {
       
       toggle.setAttribute('aria-expanded', !isExpanded);
       list.style.display = isExpanded ? 'none' : 'grid';
-      icon.textContent = isExpanded ? '?' : '?';
+      icon.textContent = isExpanded ? '▼' : '▶';
     }
   });
 }
@@ -1086,7 +1086,7 @@ function updatePricingDisplay() {
       ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
       : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
     const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' ? ')}`;
+    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' • ')}`;
   }
 
   const paymentTotalAmount = document.getElementById('payment-total-amount');
@@ -1115,8 +1115,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} ? ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} ? ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} × ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} × ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
