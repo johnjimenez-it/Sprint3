@@ -888,10 +888,15 @@ function setupPriceBreakdownToggle() {
       const list = toggle.closest('.price-breakdown').querySelector('.price-breakdown-list');
       const icon = toggle.querySelector('.toggle-icon');
       const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-      
-      toggle.setAttribute('aria-expanded', !isExpanded);
-      list.style.display = isExpanded ? 'none' : 'grid';
-      icon.textContent = isExpanded ? '?' : '?';
+      const expanded = !isExpanded;
+
+      toggle.setAttribute('aria-expanded', expanded ? 'true' : 'false');
+      if (list) {
+        list.style.display = expanded ? 'grid' : 'none';
+      }
+      if (icon) {
+        icon.textContent = expanded ? '-' : '+';
+      }
     }
   });
 }
@@ -1086,7 +1091,7 @@ function updatePricingDisplay() {
       ? `Multi-background add-on = ${formatCurrency(details.multiBackgroundCost, details.currency)}`
       : `Add-on available for ${formatCurrency(details.multiBackgroundFee, details.currency)}`);
     const paymentTotalText = details.total > 0 ? formatCurrency(details.total, details.currency) : 'Free';
-    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' ? ')}`;
+    paymentNote.textContent = `Current total: ${paymentTotalText}. ${extras.join(' | ')}`;
   }
 
   const paymentTotalAmount = document.getElementById('payment-total-amount');
@@ -1115,8 +1120,8 @@ function buildPriceBreakdownMarkup(source) {
 
   const lines = [
     priceBreakdownLine('Base package', charges.basePrice, currency),
-    priceBreakdownLine(`Prints (${prints} ? ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
-    priceBreakdownLine(`Emails (${emails} ? ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
+    priceBreakdownLine(`Prints (${prints} x ${formatCurrency(charges.perPrintFee, currency)})`, charges.printCost, currency),
+    priceBreakdownLine(`Emails (${emails} x ${formatCurrency(charges.perEmailFee, currency)})`, charges.emailCost, currency)
   ];
 
   const multiLabel = multiSelected ? 'Multi-background add-on' : 'Multi-background add-on (not selected)';
@@ -1127,7 +1132,7 @@ function buildPriceBreakdownMarkup(source) {
   return `<div class="price-breakdown">
     <button class="price-breakdown-toggle" type="button" aria-expanded="false">
       <h4>Price Breakdown</h4>
-      <span class="toggle-icon">?</span>
+      <span class="toggle-icon">+</span>
     </button>
     <ul class="price-breakdown-list" style="display: none;">${lines.join('')}</ul>
   </div>`;
@@ -1321,5 +1326,4 @@ function updateIdleCountdown(value) {
   }
 }
 
-window.togglePriceBreakdown = togglePriceBreakdown;
 window.addEventListener('DOMContentLoaded', loadConfig);
